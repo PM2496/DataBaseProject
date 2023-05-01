@@ -37,8 +37,8 @@ class Win_Login:
             # 登录窗口隐藏，登录框密码清空
             self.ui.hide()
             self.ui.edt_password.clear()
-            ShareInfo.mainWin = Win_Main()
-            ShareInfo.mainWin.ui.show()
+            ShareInfo.rootWin = Win_Root()
+            ShareInfo.rootWin.ui.show()
         else:
             QMessageBox.critical(
                 self.ui,
@@ -47,17 +47,25 @@ class Win_Login:
             )
 
 
-class Win_Main:
+class Win_Root:
     def __init__(self):
         self.ui = QUiLoader().load('root.ui')
         self.ui.actionQuit.triggered.connect(self.onSignOut)
         self.ui.listWidget.currentRowChanged.connect(self.display)
         self.ui.btn_createDB.clicked.connect(self.createDB)
+        self.ui.btn_importDB.clicked.connect(self.importDB)
 
     def onSignOut(self):
         self.ui.close()
         ShareInfo.loginWin.ui.show()
 
+    # index = 0，初始化
+    # index = 1，管理员账户
+    # index = 2，医生账户
+    # index = 3，患者账户
+    # index = 4，护士账户
+    # index = 5，药剂师账户
+    # index = 6，收银员账户
     def display(self, index):
         self.ui.stackedWidget.setCurrentIndex(index)
 
@@ -67,6 +75,14 @@ class Win_Main:
             self.ui.Info.appendPlainText("创建表成功")
         else:
             self.ui.Info.appendPlainText("表已存在")
+
+    def importDB(self):
+        self.ui.Info.appendPlainText("开始导入数据")
+        if jdbc.importDB():
+            self.ui.Info.appendPlainText("导入数据成功")
+        else:
+            self.ui.Info.appendPlainText("导入数据失败")
+
 
 app = QApplication([])
 jdbc = JDBC()

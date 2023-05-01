@@ -1,3 +1,3 @@
 class ShareInfo:
-    mainWin = None
+    rootWin = None
     loginWin = None

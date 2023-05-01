@@ -13,10 +13,11 @@ class JDBC:
     def createDB(self):
         try:
             sql = """
-        CREATE TABLE `cs2329.patient` (
+          CREATE TABLE `cs2329.patient` (
           Pno int unsigned NOT NULL AUTO_INCREMENT COMMENT '患者编号',
           Pname varchar(20) NOT NULL COMMENT '患者姓名',
           Pid varchar(20) NOT NULL COMMENT '身份证号',
+          Password varchar(20) NOT NULL COMMENT '登录密码',
           Pino varchar(20) NOT NULL COMMENT '社保号',
           Pmno varchar(20) NOT NULL COMMENT '医疗卡号',
           Psex varchar(2) NOT NULL COMMENT '性别',
@@ -61,6 +62,7 @@ class JDBC:
 
         CREATE TABLE `cs2329.doctor` (
           Dno int unsigned NOT NULL AUTO_INCREMENT COMMENT '医生编号',
+          Password varchar(20) NOT NULL COMMENT '登录密码',
           Dname varchar(20) NOT NULL COMMENT '医生姓名',
           Dsex varchar(2) NOT NULL COMMENT '性别',
           Dage int unsigned NOT NULL COMMENT '年龄',
@@ -81,6 +83,7 @@ class JDBC:
 
         CREATE TABLE `cs2329.nurse` (
           Nno int unsigned NOT NULL AUTO_INCREMENT COMMENT '护士编号',
+          Password varchar(20) NOT NULL COMMENT '登录密码',
           Nname varchar(20) NOT NULL COMMENT '护士姓名',
           Nsex varchar(2) NOT NULL COMMENT '性别',
           Nage int unsigned NOT NULL COMMENT '年龄',
@@ -95,6 +98,7 @@ class JDBC:
 
         CREATE TABLE `cs2329.cashier` (
           Cno int unsigned NOT NULL AUTO_INCREMENT COMMENT '收银员编号',
+          Password varchar(20) NOT NULL COMMENT '登录密码',
           Cname varchar(20) NOT NULL COMMENT '收银员姓名',
           Csex varchar(2) NOT NULL COMMENT '性别',
           Cage int unsigned NOT NULL COMMENT '年龄',
@@ -108,6 +112,7 @@ class JDBC:
 
         CREATE TABLE `cs2329.pharmacist` (
           Phno int unsigned NOT NULL AUTO_INCREMENT COMMENT '药剂师编号',
+          Password varchar(20) NOT NULL COMMENT '登录密码',
           Phname varchar(20) NOT NULL COMMENT '药剂师姓名',
           Phsex varchar(2) NOT NULL COMMENT '性别',
           Phage int unsigned NOT NULL COMMENT '年龄',
@@ -149,13 +154,13 @@ class JDBC:
           Mtype varchar(20) NOT NULL COMMENT '药品类型',
           PRIMARY KEY (Mno)
         );
-        
+
         ALTER TABLE `cs2329.godown_slave`
             ADD CONSTRAINT Mno_Mno FOREIGN KEY (Mno) REFERENCES `cs2329.medicine` (Mno);
-        
+
         ALTER TABLE `cs2329.medicine`
             ADD CONSTRAINT GSno_GSno FOREIGN KEY (GSno) REFERENCES `cs2329.godown_slave` (GSno);
-        
+
         CREATE TABLE `cs2329.diagnosis` (
           DGno int unsigned NOT NULL AUTO_INCREMENT COMMENT '诊断编号',
           Pno int unsigned NOT NULL COMMENT '患者编号',
@@ -235,6 +240,207 @@ class JDBC:
             # print('创建表失败')
             return False
 
+    def importDB(self):
+        # # 导入患者信息
+        # sqls = ["insert into `cs2329.patient` values(161, '刘景', '142201198702130061', '0061', '1201676', '6781121941', '男', '1987-2-13', '新华路光源街')",
+        #         "insert into `cs2329.patient_tel` values(01, 161, '手机', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(02, 161, '家庭电话', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(03, 161, '单位电话', '12988011007')",
+        #         "insert into `cs2329.patient` values(181, '陈禄', '142201196608190213', '0213', '1204001', '5461021938', '男', '1987-8-19', '城建路茂源巷')",
+        #         "insert into `cs2329.patient_tel` values(04, 181, '手机', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(05, 181, '家庭电话', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(06, 181, '单位电话', '12988011007')",
+        #         "insert into `cs2329.patient` values(201, '曾华', '142201197803110234', '0234', '0800920', '1231111932', '男', '1987-3-11', '新建路柳巷')",
+        #         "insert into `cs2329.patient_tel` values(07, 201, '手机', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(08, 201, '家庭电话', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(09, 201, '单位电话', '12988011007')",
+        #         "insert into `cs2329.patient` values(421, '傅伟相', '142201199109230221', '0221', '0700235', '4901021947', '男', '1987-9-23', '高新区西源大道')",
+        #         "insert into `cs2329.patient_tel` values(10, 421, '手机', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(11, 421, '家庭电话', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(12, 421, '单位电话', '12988011007')",
+        #         "insert into `cs2329.patient` values(481, '张珍', '142201199206200321', '0321', '1200432', '3451121953', '女', '1987-6-20', '西湖区南街')",
+        #         "insert into `cs2329.patient_tel` values(13, 481, '手机', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(14, 481, '家庭电话', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(15, 481, '单位电话', '12988011007')",
+        #         "insert into `cs2329.patient` values(501, '李秀', '142201198803300432', '0432', '0692015', '3341111936', '女', '1987-3-30', '泰山大道北路')",
+        #         "insert into `cs2329.patient_tel` values(16, 501, '手机', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(17, 501, '家庭电话', '12988011007')",
+        #         "insert into `cs2329.patient_tel` values(18, 501, '单位电话', '12988011007')",
+        #         ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+
+        # # 导入工资信息
+        # sqls = [
+        #     "insert into `cs2329.salary` values(03, '高级', 4000)",
+        #     "insert into `cs2329.salary` values(05, '中级', 3000)",
+        #     "insert into `cs2329.salary` values(01, '高级', 5000)",
+        #     "insert into `cs2329.salary` values(06, '初级', 2500)"
+        # ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+
+        # 导入职称信息
+
+        sqls = [
+            "insert into `cs2329.title` values(102, 05,'医师', '医疗')",
+            "insert into `cs2329.title` values(104, 03,'副主任医师', '医疗')",
+            "insert into `cs2329.title` values(103, 04,'主治医师', '医疗')",
+            "insert into `cs2329.title` values(105, 01,'主任医师', '医疗')",
+            "insert into `cs2329.title` values(223, 06,'初级护士', '护理')",
+            "insert into `cs2329.title` values(235, 03,'主任护士', '护理')"
+        ]
+        for sql in sqls:
+            self.cursor.execute(sql)
+            self.conn.commit()
+
+        # # 导入组织机构信息
+        # sqls = [
+        #     "insert into `cs2329.dept` values(00, '人民', null, null)",
+        #     "insert into `cs2329.dept` values(10, '门诊部', 00, null)",
+        #     "insert into `cs2329.dept` values(101, '消化内科', 10, 82)",
+        #     "insert into `cs2329.dept` values(102, '急诊内科', 10, 368)",
+        #     "insert into `cs2329.dept` values(103, '门内三诊室', 10, 21)",
+        #     "insert into `cs2329.dept` values(20, '社区医疗部', 00, null)",
+        #     "insert into `cs2329.dept` values(201, '家庭病床病区', 20, 73)",
+        # ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+        #
+        # # 导入医生信息
+        # sqls = [
+        #     "insert into `cs2329.doctor` values(140, '140','郝亦柯', '男', 28, 101, 01, '140', '是', 20)",
+        #     "insert into `cs2329.doctor` values(21, '21','刘伟', '男', 43, 104, 01, '21', '是', 20)",
+        #     "insert into `cs2329.doctor` values(368, '368','罗晓', '女', 27, 103, 04, '368', '是', 20)",
+        #     "insert into `cs2329.doctor` values(73, '73','邓英超', '女', 43, 105, 33, '73', '否', 10)",
+        #     "insert into `cs2329.doctor` values(82, '82','杨勋', '男', 25, 104, 35, '82', '否', 10)",
+        #     ]
+        # for sql in sqls:
+        #     self.cursor.execute(sql)
+        #     self.conn.commit()
+            # if not self.dbInsert(sql):
+            #     return False
+
+
+
+
+        # # 导入入库主单信息
+        # sqls = [
+        #     "insert into `cs2329.godown_entry` values(1, '2016-1-2 13:00:12', '抗生素类药品')",
+        #     "insert into `cs2329.godown_entry` values(12, '2016-11-24 18:00:00', '心脑血管用药')",
+        #     "insert into `cs2329.godown_entry` values(31, '2017-1-14 9:02:01', '消化系统用药')",
+        #     "insert into `cs2329.godown_entry` values(34, '2017-3-20 12:19:10', '呼吸系统用药')",
+        #     "insert into `cs2329.godown_entry` values(2, '2016-1-3 14:00:00', '泌尿系统用药')",
+        #     "insert into `cs2329.godown_entry` values(11, '2016-11-20 18:00:00', '血液系统用药')",
+        #     "insert into `cs2329.godown_entry` values(3, '2016-1-10 9:10:22', '抗风湿类药品')",
+        #     "insert into `cs2329.godown_entry` values(9, '2016-4-27 13:20:00', '注射剂类药品')",
+        #     "insert into `cs2329.godown_entry` values(14, '2016-12-20 17:00:31', '激素类药品')",
+        #     "insert into `cs2329.godown_entry` values(4, '2016-1-20 20:10:02', '皮肤科用药')",
+        #     "insert into `cs2329.godown_entry` values(6, '2016-4-27 13:20:00', '妇科用药')",
+        #     "insert into `cs2329.godown_entry` values(7, '2016-5-10 18:30:05', '抗肿瘤用药')",
+        #     "insert into `cs2329.godown_entry` values(13, '2016-12-01 12:15:00', '抗精神病药品')",
+        #     "insert into `cs2329.godown_entry` values(8, '2016-6-06 15:50:20', '清热解毒药品')",
+        #     "insert into `cs2329.godown_entry` values(33, '2017-2-24 8:02:52', '维生素、矿物质药品')",
+        #     "insert into `cs2329.godown_entry` values(32, '2017-1-19 7:22:00', '糖尿病用药')"
+        # ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+        #
+        # # 导入入库从单信息
+        # sqls = [
+        #     "insert into `cs2329.godown_slave` values(02, 17, 314941, 23, '箱', '232342345', 3000, '2019-12-30')",
+        #     "insert into `cs2329.godown_slave` values(12, 1, 315189, 50, '箱', '345465675', 2560, '2020-12-30')",
+        #     "insert into `cs2329.godown_slave` values(34, 12, 314172, 100, '盒', '678786994', 50300, '2022-3-10')",
+        #     "insert into `cs2329.godown_slave` values(55, 25, 315501, 85, '盒', '534525342', 1450, '2022-6-20')"
+        # ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+        #
+        # # 导入药品信息
+        # sqls = [
+        #     "insert into `cs2329.medicine` values(314172, 34, '卡托利普片', 0.037, '片', '西药')",
+        #     "insert into `cs2329.medicine` values(314418, 01, '卡托利普片', 11.5, '瓶', '西药')",
+        #     "insert into `cs2329.medicine` values(314941, 02, '卡托利普片', 27.1, '盒', '西药')",
+        #     "insert into `cs2329.medicine` values(315189, 12, '卡托利普片', 26.9, '盒', '西药')",
+        #     "insert into `cs2329.medicine` values(315501, 55, '卡托利普片', 21, '盒', '西药')",
+        #     "insert into `cs2329.medicine` values(315722, 03, '卡托利普片', 26.9, '盒', '西药')",
+        #     "insert into `cs2329.medicine` values(315805, 04, '卡托利普片', 0.1267, '粒', '西药')",
+        #     "insert into `cs2329.medicine` values(315977, 05, '卡托利普片', 26.5, '盒', '西药')",
+        #     "insert into `cs2329.medicine` values(316792, 06, '卡托利普片', 2.3, '粒', '西药')",
+        #     "insert into `cs2329.medicine` values(316910, 07, '卡托利普片', 46, '支', '西药')",
+        #     "insert into `cs2329.medicine` values(317660, 08, '卡托利普片', 25.5, '盒', '中成药')"
+        #     ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+        #
+        # # 导入就诊信息
+        # sqls = [
+        #     "insert into `cs2329.diagnosis` values(1645, 481, 140, '呼吸道感染', '伤风感冒', '2007-7-21 01:12:01', 3)",
+        #     "insert into `cs2329.diagnosis` values(2170, 201, 21, '皮肤和软组织感染', '细菌感染', '2007-7-22 10:10:03', 5)",
+        #     "insert into `cs2329.diagnosis` values(3265, 161, 82, '胃溃疡', '螺杆菌感染', '2007-7-23 10:59:42', 5)",
+        #     "insert into `cs2329.diagnosis` values(3308, 181, 82, '消化不良', '胃病', '2007-7-23 11:11:34', 5)",
+        #     "insert into `cs2329.diagnosis` values(3523, 501, 73, '心力衰竭', '高血压', '2007-7-23 02:01:05', 7)",
+        #     "insert into `cs2329.diagnosis` values(7816, 421, 368, '肾盂结石', '肾结石', '2008-1-8 05:17:03', 3)",
+        #     ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+        #
+        # # 导入处方信息
+        # sqls = [
+        #     "insert into `cs2329.recipe_master` values(1282317, 103, 140, 181, 12, '20016-7-21 01:12:01')",
+        #     "insert into `cs2329.recipe_master` values(1282872, 201, 368, 161, 50, '2007-7-22 10:10:03')",
+        #     "insert into `cs2329.recipe_master` values(1283998, 20, 73, 481, 23, '2007-7-23 10:59:42')",
+        #     "insert into `cs2329.recipe_master` values(1284041, 101, 368, 501, 48, '2007-7-23 11:11:34')",
+        #     "insert into `cs2329.recipe_master` values(1284256, 103, 21, 201, 36, '2007-7-23 02:01:05')",
+        #     "insert into `cs2329.recipe_master` values(1458878, 102, 82, 421, 30, '2008-1-8 05:17:03')",
+        #     ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+        #
+        # # 导入处方药品清单信息
+        # sqls = [
+        #     "insert into `cs2329.recipe_detail` values(16, 1282872, 314941, 200, 3, '盒')",
+        #     "insert into `cs2329.recipe_detail` values(32, 1458878, 315189, 360, 4, '盒')",
+        #     "insert into `cs2329.recipe_detail` values(47, 1284041, 315977, 14, 1, '片')",
+        #     "insert into `cs2329.recipe_detail` values(89, 1282317, 316910, 2.5, 10, '粒')",
+        #     ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+        #
+        # # 导入挂号单信息
+        # sqls = [
+        #     "insert into `cs2329.register_form` values(13, 20, 73, 481, 01, '2016-7-11 06:12:09', '2016-7-11 08:00:00', 5, null)",
+        #     "insert into `cs2329.register_form` values(56, 201, 368, 161, 08, '2016-7-28 09:20:19', '2016-7-28 09:30:00', 7, null)",
+        #     "insert into `cs2329.register_form` values(71, 103, 140, 181, 09, '2017-1-10 16:09:02', '2017-1-10 17:30:00', 7, null)",
+        #     "insert into `cs2329.register_form` values(89, 102, 82, 421, 02, '2017-3-16 19:18:10', '2017-3-16 19:20:10', 5, null)",
+        #     ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+        #
+        # # 导入费用信息
+        # sqls = [
+        #     "insert into `cs2329.fee` values(1281645, '02995606', '2016-7-21 01:12:01', 1645, 1282317, 09, 181, 200, 0, 200)",
+        #     "insert into `cs2329.fee` values(1282170, '02994356', '2016-7-22 10:10:03', 7816, 1282872, 01, 481, 189, 37.8, 151.2)",
+        #     "insert into `cs2329.fee` values(1283265, '02996768', '2016-7-23 10:59:42', 2170, 1283998, 02, 501, 560, 112, 448)",
+        #     "insert into `cs2329.fee` values(1283308, '02995687', '2016-7-23 11:11:34', 3308, 1284041, 05, 201, 17, 3.4, 13.6)",
+        #     "insert into `cs2329.fee` values(1283523, '02997432', '2016-7-23 02:01:05', 3523, 1284256, 08, 481, 13, 0, 13)",
+        #     "insert into `cs2329.fee` values(1457816, '02990101', '2017-1-8 05:17:03', 3265, 1458878, 09, 21, 111, 0, 111)",
+        # ]
+        # for sql in sqls:
+        #     if not self.dbInsert(sql):
+        #         return False
+
+        return True
     # 判断表是否存在
     def table_exists(self, table_name):
         sql = "show tables;"
