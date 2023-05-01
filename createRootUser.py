@@ -7,8 +7,10 @@ conn = pymysql.connect(host='124.71.219.185', user='root', password='uestc2022!'
 
 cursor = conn.cursor()
 # 创建管理员账户表
-# sql = "create table ROOT(USERNAME CHAR(20) not null , PASSWORD CHAR(20) not null, primary key (USERNAME))"
-sql = "insert into root values('root', '909090')"
+sql = """
+create table ROOT(USERNAME CHAR(20) not null , PASSWORD CHAR(20) not null, primary key (USERNAME));
+insert into root values('root', '909090')
+"""
 
 try:
     cursor.execute(sql)

@@ -49,7 +49,7 @@ class Win_Login:
 
 class Win_Main:
     def __init__(self):
-        self.ui = QUiLoader().load('main.ui')
+        self.ui = QUiLoader().load('root.ui')
         self.ui.actionQuit.triggered.connect(self.onSignOut)
         self.ui.listWidget.currentRowChanged.connect(self.display)
         self.ui.btn_createDB.clicked.connect(self.createDB)
@@ -66,7 +66,7 @@ class Win_Main:
         if jdbc.createDB():
             self.ui.Info.appendPlainText("创建表成功")
         else:
-            self.ui.Info.appendPlainText("创建表失败")
+            self.ui.Info.appendPlainText("表已存在")
 
 app = QApplication([])
 jdbc = JDBC()

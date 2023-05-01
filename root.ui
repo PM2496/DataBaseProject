@@ -60,12 +60,17 @@
       </item>
       <item>
        <property name="text">
-        <string>人事账户</string>
+        <string>护士账户</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>药品管理员账户</string>
+        <string>药剂师账户</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>收银员账户</string>
        </property>
       </item>
      </widget>
@@ -285,19 +290,12 @@
      <height>37</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
-    <property name="title">
-     <string>初始化</string>
-    </property>
-    <addaction name="actionInit"/>
-   </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
      <string>关于</string>
     </property>
     <addaction name="actionQuit"/>
    </widget>
-   <addaction name="menu"/>
    <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -311,9 +309,8 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionInit"/>
-   <addaction name="separator"/>
    <addaction name="actionQuit"/>
+   <addaction name="separator"/>
   </widget>
   <action name="actionInit">
    <property name="text">
