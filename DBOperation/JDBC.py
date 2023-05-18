@@ -17,7 +17,6 @@ class JDBC:
           Pno int unsigned NOT NULL AUTO_INCREMENT COMMENT '患者编号',
           Pname varchar(20) NOT NULL COMMENT '患者姓名',
           Pid varchar(20) NOT NULL UNIQUE COMMENT '身份证号',
-          Password varchar(20) NOT NULL COMMENT '登录密码',
           Pino varchar(20) NOT NULL COMMENT '社保号',
           Pmno varchar(20) NOT NULL COMMENT '医疗卡号',
           Psex varchar(2) NOT NULL COMMENT '性别',
@@ -66,7 +65,6 @@ class JDBC:
 
         CREATE TABLE `cs2329.doctor` (
           Dno int unsigned NOT NULL AUTO_INCREMENT COMMENT '医生编号',
-          Password varchar(20) NOT NULL COMMENT '登录密码',
           Dname varchar(20) NOT NULL COMMENT '医生姓名',
           Dsex varchar(2) NOT NULL COMMENT '性别',
           Dage int unsigned NOT NULL COMMENT '年龄',
@@ -87,7 +85,6 @@ class JDBC:
 
         CREATE TABLE `cs2329.nurse` (
           Nno int unsigned NOT NULL AUTO_INCREMENT COMMENT '护士编号',
-          Password varchar(20) NOT NULL COMMENT '登录密码',
           Nname varchar(20) NOT NULL COMMENT '护士姓名',
           Nsex varchar(2) NOT NULL COMMENT '性别',
           Nage int unsigned NOT NULL COMMENT '年龄',
@@ -102,7 +99,6 @@ class JDBC:
 
         CREATE TABLE `cs2329.cashier` (
           Cno int unsigned NOT NULL AUTO_INCREMENT COMMENT '收银员编号',
-          Password varchar(20) NOT NULL COMMENT '登录密码',
           Cname varchar(20) NOT NULL COMMENT '收银员姓名',
           Csex varchar(2) NOT NULL COMMENT '性别',
           Cage int unsigned NOT NULL COMMENT '年龄',
@@ -116,7 +112,6 @@ class JDBC:
 
         CREATE TABLE `cs2329.pharmacist` (
           Phno int unsigned NOT NULL AUTO_INCREMENT COMMENT '药剂师编号',
-          Password varchar(20) NOT NULL COMMENT '登录密码',
           Phname varchar(20) NOT NULL COMMENT '药剂师姓名',
           Phsex varchar(2) NOT NULL COMMENT '性别',
           Phage int unsigned NOT NULL COMMENT '年龄',
@@ -246,27 +241,27 @@ class JDBC:
 
     def importDB(self):
         # 导入患者信息
-        sqls = ["insert into `cs2329.patient` values(161, '刘景', '142201198702130061', '0061', '1201676', '6781121941', '男', '1987-2-13', '新华路光源街')",
+        sqls = ["insert into `cs2329.patient` values(161, '刘景', '142201198702130061', '1201676', '6781121941', '男', '1987-2-13', '新华路光源街')",
                 "insert into `cs2329.patient_tel` values(01, 161, '手机', '12988011007')",
                 "insert into `cs2329.patient_tel` values(02, 161, '家庭电话', '12988011007')",
                 "insert into `cs2329.patient_tel` values(03, 161, '单位电话', '12988011007')",
-                "insert into `cs2329.patient` values(181, '陈禄', '142201196608190213', '0213', '1204001', '5461021938', '男', '1987-8-19', '城建路茂源巷')",
+                "insert into `cs2329.patient` values(181, '陈禄', '142201196608190213', '1204001', '5461021938', '男', '1987-8-19', '城建路茂源巷')",
                 "insert into `cs2329.patient_tel` values(04, 181, '手机', '12988011007')",
                 "insert into `cs2329.patient_tel` values(05, 181, '家庭电话', '12988011007')",
                 "insert into `cs2329.patient_tel` values(06, 181, '单位电话', '12988011007')",
-                "insert into `cs2329.patient` values(201, '曾华', '142201197803110234', '0234', '0800920', '1231111932', '男', '1987-3-11', '新建路柳巷')",
+                "insert into `cs2329.patient` values(201, '曾华', '142201197803110234', '0800920', '1231111932', '男', '1987-3-11', '新建路柳巷')",
                 "insert into `cs2329.patient_tel` values(07, 201, '手机', '12988011007')",
                 "insert into `cs2329.patient_tel` values(08, 201, '家庭电话', '12988011007')",
                 "insert into `cs2329.patient_tel` values(09, 201, '单位电话', '12988011007')",
-                "insert into `cs2329.patient` values(421, '傅伟相', '142201199109230221', '0221', '0700235', '4901021947', '男', '1987-9-23', '高新区西源大道')",
+                "insert into `cs2329.patient` values(421, '傅伟相', '142201199109230221', '0700235', '4901021947', '男', '1987-9-23', '高新区西源大道')",
                 "insert into `cs2329.patient_tel` values(10, 421, '手机', '12988011007')",
                 "insert into `cs2329.patient_tel` values(11, 421, '家庭电话', '12988011007')",
                 "insert into `cs2329.patient_tel` values(12, 421, '单位电话', '12988011007')",
-                "insert into `cs2329.patient` values(481, '张珍', '142201199206200321', '0321', '1200432', '3451121953', '女', '1987-6-20', '西湖区南街')",
+                "insert into `cs2329.patient` values(481, '张珍', '142201199206200321', '1200432', '3451121953', '女', '1987-6-20', '西湖区南街')",
                 "insert into `cs2329.patient_tel` values(13, 481, '手机', '12988011007')",
                 "insert into `cs2329.patient_tel` values(14, 481, '家庭电话', '12988011007')",
                 "insert into `cs2329.patient_tel` values(15, 481, '单位电话', '12988011007')",
-                "insert into `cs2329.patient` values(501, '李秀', '142201198803300432', '0432', '0692015', '3341111936', '女', '1987-3-30', '泰山大道北路')",
+                "insert into `cs2329.patient` values(501, '李秀', '142201198803300432', '0692015', '3341111936', '女', '1987-3-30', '泰山大道北路')",
                 "insert into `cs2329.patient_tel` values(16, 501, '手机', '12988011007')",
                 "insert into `cs2329.patient_tel` values(17, 501, '家庭电话', '12988011007')",
                 "insert into `cs2329.patient_tel` values(18, 501, '单位电话', '12988011007')",
@@ -317,11 +312,11 @@ class JDBC:
 
         # 导入医生信息
         sqls = [
-            "insert into `cs2329.doctor` values(140, '140','郝亦柯', '男', 28, 101, 102, '140', '是', 20)",
-            "insert into `cs2329.doctor` values(21, '21','刘伟', '男', 43, 104, 103, '21', '是', 20)",
-            "insert into `cs2329.doctor` values(368, '368','罗晓', '女', 27, 103, 104, '368', '是', 20)",
-            "insert into `cs2329.doctor` values(73, '73','邓英超', '女', 43, 105, 105, '73', '否', 10)",
-            "insert into `cs2329.doctor` values(82, '82','杨勋', '男', 25, 104, 103, '82', '否', 10)",
+            "insert into `cs2329.doctor` values(140, '郝亦柯', '男', 28, 101, 102, '140', '是', 20)",
+            "insert into `cs2329.doctor` values(21, '刘伟', '男', 43, 104, 103, '21', '是', 20)",
+            "insert into `cs2329.doctor` values(368, '罗晓', '女', 27, 103, 104, '368', '是', 20)",
+            "insert into `cs2329.doctor` values(73, '邓英超', '女', 43, 105, 105, '73', '否', 10)",
+            "insert into `cs2329.doctor` values(82, '杨勋', '男', 25, 104, 103, '82', '否', 10)",
             ]
         for sql in sqls:
             if not self.dbInsert(sql):
@@ -341,11 +336,11 @@ class JDBC:
 
         # 导入护士信息
         sqls = [
-            "insert into `cs2329.nurse` values(01, '01','王亦柯', '男', 28, 101, 223, '140', '20')",
-            "insert into `cs2329.nurse` values(02, '02','周伟', '男', 43, 104, 235, '21', '20')",
-            "insert into `cs2329.nurse` values(03, '03','刘晓', '女', 27, 103, 235, '368', '20')",
-            "insert into `cs2329.nurse` values(04, '04','邓超', '女', 43, 105, 223, '73', '10')",
-            "insert into `cs2329.nurse` values(05, '05','钱勋', '男', 25, 104, 235, '82', '10')",
+            "insert into `cs2329.nurse` values(01, '王亦柯', '男', 28, 101, 223, '140', '20')",
+            "insert into `cs2329.nurse` values(02, '周伟', '男', 43, 104, 235, '21', '20')",
+            "insert into `cs2329.nurse` values(03, '刘晓', '女', 27, 103, 235, '368', '20')",
+            "insert into `cs2329.nurse` values(04, '邓超', '女', 43, 105, 223, '73', '10')",
+            "insert into `cs2329.nurse` values(05, '钱勋', '男', 25, 104, 235, '82', '10')",
             ]
         for sql in sqls:
             if not self.dbInsert(sql):
@@ -353,11 +348,11 @@ class JDBC:
 
         # 导入收银员信息
         sqls = [
-            "insert into `cs2329.cashier` values(01, '01','张三', '男', 28, 101, 236, '140')",
-            "insert into `cs2329.cashier` values(02, '02','李伟', '男', 43, 104, 236, '21')",
-            "insert into `cs2329.cashier` values(08, '08','韩晓', '女', 27, 103, 236, '368')",
-            "insert into `cs2329.cashier` values(09, '09','周超', '女', 43, 105, 236, '73')",
-            "insert into `cs2329.cashier` values(05, '05','李勋', '男', 25, 104, 236, '82')",
+            "insert into `cs2329.cashier` values(01, '张三', '男', 28, 101, 236, '140')",
+            "insert into `cs2329.cashier` values(02, '李伟', '男', 43, 104, 236, '21')",
+            "insert into `cs2329.cashier` values(08, '韩晓', '女', 27, 103, 236, '368')",
+            "insert into `cs2329.cashier` values(09, '周超', '女', 43, 105, 236, '73')",
+            "insert into `cs2329.cashier` values(05, '李勋', '男', 25, 104, 236, '82')",
             ]
         for sql in sqls:
             if not self.dbInsert(sql):
@@ -365,11 +360,11 @@ class JDBC:
 
         # 导入药剂师信息
         sqls = [
-            "insert into `cs2329.pharmacist` values(01, '01','王柯', '男', 28, 101, 237, '140', '20')",
-            "insert into `cs2329.pharmacist` values(02, '02','李伟', '男', 43, 104, 237, '21', '20')",
-            "insert into `cs2329.pharmacist` values(03, '03','孙晓', '女', 27, 103, 237, '368', '20')",
-            "insert into `cs2329.pharmacist` values(04, '04','李英', '女', 43, 105, 237, '73', '10')",
-            "insert into `cs2329.pharmacist` values(05, '05','赵勋', '男', 25, 104, 237, '82', '10')",
+            "insert into `cs2329.pharmacist` values(01, '王柯', '男', 28, 101, 237, '140', '20')",
+            "insert into `cs2329.pharmacist` values(02, '李伟', '男', 43, 104, 237, '21', '20')",
+            "insert into `cs2329.pharmacist` values(03, '孙晓', '女', 27, 103, 237, '368', '20')",
+            "insert into `cs2329.pharmacist` values(04, '李英', '女', 43, 105, 237, '73', '10')",
+            "insert into `cs2329.pharmacist` values(05, '赵勋', '男', 25, 104, 237, '82', '10')",
             ]
         for sql in sqls:
             if not self.dbInsert(sql):
@@ -522,6 +517,16 @@ class JDBC:
             print("插入失败")
             self.conn.rollback()
             return False
+
+    def dbQueryHeaders(self, sql):
+        try:
+            self.cursor.execute(sql)
+            description = self.cursor.description
+            headers = [desc[0] for desc in description]
+            return headers
+        except:
+            print("查询失败")
+            return None
 
     def dbQueryAll(self, sql):
         try:
