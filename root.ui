@@ -93,7 +93,7 @@
        <cursorShape>ArrowCursor</cursorShape>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="page_1">
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -136,6 +136,54 @@
       </widget>
       <widget class="QWidget" name="page_2">
        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QWidget" name="widget_8" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_15">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QComboBox" name="patientComboBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <item>
+              <property name="text">
+               <string>患者信息</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>患者联系方式</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
         <item>
          <widget class="QTableWidget" name="patientTable">
           <property name="editTriggers">
@@ -245,6 +293,26 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <item>
+              <property name="text">
+               <string>医生</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>护士</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>药剂师</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>收银员</string>
+              </property>
+             </item>
             </widget>
            </item>
            <item>
