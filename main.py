@@ -13,6 +13,9 @@ class MySignals(QObject):
     # 0为doctor，1为nurse，2为pharmacist，3为cashier
     updateHR = Signal(int, str)
     insertHR = Signal(int)
+    # 0为就诊，1为处方，2为收费 ，str为主键
+    updateTreat = Signal(int, str)
+    insertTreat = Signal(int)
 
 
 class Win_Login:
@@ -85,44 +88,101 @@ class Win_Root:
         self.ui.btn_HRDelete.clicked.connect(self.deleteHR)
         self.ui.HRComboBox.currentIndexChanged.connect(self.HRDisplay)
         self.ui.HRTable.cellClicked.connect(self.setHRBtn)
+        # 就诊表格控件
+        # self.ui.btn_TreatQuery.clicked.connect(self.queryTreat)
+        # self.ui.btn_TreatUpdate.clicked.connect(self.updateTreat)
+        # self.ui.btn_TreatInsert.clicked.connect(self.insertTreat)
+        # self.ui.btn_TreatDelete.clicked.connect(self.deleteTreat)
+        self.ui.TreatComboBox.currentIndexChanged.connect(self.TreatDisplay)
+        self.ui.TreatTable.cellClicked.connect(self.setTreatBtn)
         # 信号绑定
         mySignals.updatePatient.connect(self.updatePatientInfo)
         mySignals.insertPatient.connect(self.patientDisplay)
+
         mySignals.updateHR.connect(self.updateHRInfo)
         mySignals.insertHR.connect(self.HRDisplay)
+
+        # mySignals.updateTreat.conncet(self.updateTreatInfo)
+        # mySignals.insertTreat.connect(self.treatDisplay)
 
     def onSignOut(self):
         self.ui.close()
         ShareInfo.loginWin.ui.show()
 
-    def updateTable(self, sql, table):
-        tableHeaders = jdbc.dbQueryHeaders(sql)
+    def updateTable(self, tableName, table):
+        if tableName == 'cs2329.patient':
+            tableHeaders = ['患者编号', '姓名', '身份证号', '社保号', '医疗卡号', '性别', '生日', '地址']
+            sql = "SELECT * from `cs2329.patient`"
+        elif tableName == 'cs2329.patient_tel':
+            tableHeaders = ['患者电话编号', '患者编号', '患者姓名', '联系方式类型', '联系号码']
+            sql = "SELECT Ptno, PT.Pno, Pname, Pteltype, Ptelcode " \
+                  "from `cs2329.patient_tel` PT, `cs2329.patient` PA " \
+                  "where PT.Pno = PA.Pno"
+        elif tableName == 'cs2329.doctor':
+            tableHeaders = ['医生编号', '姓名', '性别', '年龄', '所属部门编号', '所属部门', '职称编号', '职称', '医生注册号码', '是否专家', '挂号费用']
+            sql = "SELECT Dno, Dname, Dsex, Dage, Ddeptno, DeptName, Do.Tno, Ttype, Dregno, Disex, Dfee " \
+                  "from `cs2329.doctor` Do, `cs2329.dept` De, `cs2329.title` T " \
+                  "where Do.Ddeptno = De.DeptNo and Do.Tno = T.Tno"
+        elif tableName == 'cs2329.nurse':
+            tableHeaders = ['护士编号', '姓名', '性别', '年龄', '所属部门编号', '所属部门', '职称编号', '职称', '护士证书编号', '护士级别']
+            sql = "SELECT Nno, Nname, Nsex, Nage, Ndeptno, DeptName, N.Tno, Ttype, Nceno, Nlevel " \
+                  "from `cs2329.nurse` N, `cs2329.dept` De, `cs2329.title` T " \
+                  "where N.Ndeptno = De.DeptNo and N.Tno = T.Tno"
+        elif tableName == 'cs2329.pharmacist':
+            tableHeaders = ['药剂师编号', '姓名', '性别', '年龄', '所属部门编号', '所属部门', '职称编号', '职称', '药剂师证书编号', '药剂师类型']
+            sql = "SELECT Phno, Phname, Phsex, Phage, Phdeptno, DeptName, P.Tno, Ttype, Phceno, Phtype " \
+                  "from `cs2329.pharmacist` P, `cs2329.dept` De, `cs2329.title` T " \
+                  "where P.Phdeptno = De.DeptNo and P.Tno = T.Tno"
+        elif tableName == 'cs2329.cashier':
+            tableHeaders = ['收银员编号', '姓名', '性别', '年龄', '所属部门编号', '所属部门', '职称编号', '职称', '收银员证书编号']
+            sql = "SELECT Cno, Cname, Csex, Cage, Cdeptno, DeptName, Ca.Tno, Ttype, Cceno " \
+                  "from `cs2329.cashier` Ca, `cs2329.dept` De, `cs2329.title` T " \
+                  "where Ca.Cdeptno = De.DeptNo and Ca.Tno = T.Tno"
+        elif tableName == 'cs2329.diagnosis':
+            tableHeaders = ['诊断编号', '患者编号', '患者姓名', '医生编号', '医生姓名', '症状描述', '诊断结论', '诊断时间', '就诊费用']
+            sql = "SELECT DGno, Di.Pno, Pname, Di.Dno, Dname, Symptom, Diagnosis, DGtime, Rfee " \
+                  "from `cs2329.diagnosis` Di, `cs2329.patient` P, `cs2329.doctor` Do " \
+                  "where Di.Pno = P.Pno and Di.Dno = Do.Dno"
+        elif tableName == 'cs2329.recipe_master':
+            tableHeaders = ['处方编号', '所属部门编号', '所属部门', '医生编号', '医生姓名', '患者编号', '患者姓名', '年龄', '处方时间', '处方药品清单', '费用']
+            sql = "SELECT R.RMno, R.DeptNo, DeptName, R.Dno, Dname, R.Pno, Pname, RMage, RMtime, RDno, Fno " \
+                  "from `cs2329.recipe_master` R, `cs2329.dept` De, `cs2329.patient` P, `cs2329.doctor` Do, `cs2329.recipe_detail` RD, `cs2329.fee` F " \
+                  "where R.DeptNo = De.DeptNo and R.Dno = Do.Dno and R.Pno = P.Pno and R.RMno = RD.RMno and R.RMno = F.Rno"
+
         results = jdbc.dbQueryAll(sql)
-        columnCounter = len(tableHeaders)
         table.setRowCount(0)
         table.clearContents()
-        table.setColumnCount(columnCounter)
-        table.setHorizontalHeaderLabels(tableHeaders)
-        for i in range(len(results)):
-            table.insertRow(i)
-            for j in range(columnCounter):
-                table.setItem(i, j, QTableWidgetItem(str(results[i][j])))
+        if results:
+            columnCounter = len(tableHeaders)
+            table.setColumnCount(columnCounter)
+            table.setHorizontalHeaderLabels(tableHeaders)
+            for i in range(len(results)):
+                table.insertRow(i)
+                for j in range(columnCounter):
+                    table.setItem(i, j, QTableWidgetItem(str(results[i][j])))
 
     def patientDisplay(self, index):
         self.resetBtn(0)
         tables = ['cs2329.patient', 'cs2329.patient_tel']
-        sql = "SELECT * from `%s`" % tables[index]
-        self.updateTable(sql, self.ui.patientTable)
+        tableName = tables[index]
+        self.updateTable(tableName, self.ui.patientTable)
 
     def HRDisplay(self, index):
         self.resetBtn(1)
         tables = ['cs2329.doctor', 'cs2329.nurse', 'cs2329.pharmacist', 'cs2329.cashier']
-        sql = "SELECT * from `%s`" % tables[index]
-        self.updateTable(sql, self.ui.HRTable)
+        tableName = tables[index]
+        self.updateTable(tableName, self.ui.HRTable)
+
+    def TreatDisplay(self, index):
+        self.resetBtn(2)
+        tables = ['cs2329.diagnosis', 'cs2329.recipe_master']
+        tableName = tables[index]
+        self.updateTable(tableName, self.ui.TreatTable)
 
     # index = 0，初始化
     # index = 1，患者管理
     # index = 2，人事管理（医生，护士，药剂师，收银员）
+    # index = 3，就诊管理（就诊表，处方表，药品表，费用表）
     def display(self, index):
         self.ui.stackedWidget.setCurrentIndex(index)
         if index >= 1:
@@ -132,6 +192,9 @@ class Win_Root:
             if index == 2:
                 self.ui.HRComboBox.setCurrentIndex(0)
                 self.HRDisplay(0)
+            if index == 3:
+                self.ui.TreatComboBox.setCurrentIndex(0)
+                self.TreatDisplay(0)
 
     def createDB(self):
         self.ui.Info.appendPlainText("开始创建表")
@@ -155,6 +218,10 @@ class Win_Root:
     def setHRBtn(self):
         self.ui.btn_HRUpdate.setEnabled(True)
         self.ui.btn_HRDelete.setEnabled(True)
+
+    def setTreatBtn(self):
+        self.ui.btn_TreatUpdate.setEnabled(True)
+        self.ui.btn_TreatDelete.setEnabled(True)
     # 重置按钮
     # index用于区分是哪个表格的按钮
     # 0: patientTable
@@ -166,20 +233,34 @@ class Win_Root:
         if index == 1:
             self.ui.btn_HRUpdate.setEnabled(False)
             self.ui.btn_HRDelete.setEnabled(False)
+        if index == 2:
+            self.ui.btn_TreatUpdate.setEnabled(False)
+            self.ui.btn_TreatDelete.setEnabled(False)
 
     def queryPatient(self):
         patientInfo = self.ui.patientInfo.text()
         # print("开始查询"+patientInfo)
         currentIndex = self.ui.patientComboBox.currentIndex()
-        tables = [['cs2329.patient', 'Pname'], ['cs2329.patient_tel', 'Pno']]
+
         if patientInfo:
-            sql = "SELECT * from `%s` where %s LIKE '%%%s%%'" % (tables[currentIndex][0], tables[currentIndex][1], patientInfo)
+            if currentIndex == 0:
+                sql = "SELECT * from `cs2329.patient` PA where PA.Pname  LIKE '%%%s%%'" % patientInfo
+                columnCounter = 8
+            else:
+                sql = "SELECT Ptno, PT.Pno, Pname, Pteltype, Ptelcode " \
+                      "from `cs2329.patient_tel` PT, `cs2329.patient` PA " \
+                      "where PT.Pno = PA.Pno and PA.Pname LIKE '%%%s%%'" % patientInfo
+                columnCounter = 5
         else:
-            sql = "SELECT * from `%s`" % (tables[currentIndex][0])
-
+            if currentIndex == 0:
+                sql = "SELECT * from `cs2329.patient`"
+                columnCounter = 8
+            else:
+                sql = "SELECT Ptno, PT.Pno, Pname, Pteltype, Ptelcode " \
+                      "from `cs2329.patient_tel` PT, `cs2329.patient` PA " \
+                      "where PT.Pno = PA.Pno"
+                columnCounter = 5
         results = jdbc.dbQueryAll(sql)
-        columnCounter = len(jdbc.dbQueryHeaders("SELECT * from `%s`" % (tables[currentIndex][0])))
-
         self.ui.patientTable.setRowCount(0)
         self.ui.patientTable.clearContents()
         self.ui.patientTable.setColumnCount(columnCounter)
@@ -192,7 +273,6 @@ class Win_Root:
     def updatePatient(self):
         currentIndex = self.ui.patientComboBox.currentIndex()
         currentRow = self.ui.patientTable.currentRow()
-        print(currentIndex)
         if currentIndex == 0:
             pno = self.ui.patientTable.item(currentRow, 0).text()
             ShareInfo.updatePatientWin = Win_updatePatient(pno)
@@ -204,11 +284,12 @@ class Win_Root:
 
     def updatePatientInfo(self, index, key):
         currentRow = self.ui.patientTable.currentRow()
-        tables = ['cs2329.patient', 'cs2329.patient_tel']
         if index == 0:
-            sql = "SELECT * from `%s` where Pno=%s" % (tables[index], key)
+            sql = "SELECT * from `cs2329.patient` where Pno=%s" % key
         else:
-            sql = "SELECT * from `%s` where Ptno=%s" % (tables[index], key)
+            sql = "SELECT Ptno, PT.Pno, Pname, Pteltype, Ptelcode " \
+                  "from `cs2329.patient_tel` PT, `cs2329.patient` PA " \
+                  "where PT.Pno = PA.Pno and Ptno=%s" % key
         results = jdbc.dbQueryOne(sql)
         for i in range(len(results)):
             self.ui.patientTable.setItem(currentRow, i, QTableWidgetItem(str(results[i])))
@@ -233,17 +314,51 @@ class Win_Root:
 
     def queryHR(self):
         HRInfo = self.ui.HRInfo.text()
-        # print("开始查询"+patientInfo)
         currentIndex = self.ui.HRComboBox.currentIndex()
-        tables = [['cs2329.doctor', 'Dname'], ['cs2329.nurse', 'Nname'], ['cs2329.pharmacist', 'Phname'], ['cs2329.cashier', 'Cname']]
         if HRInfo:
-            sql = "SELECT * from `%s` where %s LIKE '%%%s%%'" % (tables[currentIndex][0], tables[currentIndex][1], HRInfo)
+            if currentIndex == 0:
+                sql = "SELECT Dno, Dname, Dsex, Dage, Ddeptno, DeptName, Do.Tno, Ttype, Dregno, Disex, Dfee " \
+                      "from `cs2329.doctor` Do, `cs2329.dept` De, `cs2329.title` T " \
+                      "where Do.Ddeptno = De.DeptNo and Do.Tno = T.Tno and Dname LIKE '%%%s%%'" % HRInfo
+                columnCounter = 11
+            elif currentIndex == 1:
+                sql = "SELECT Nno, Nname, Nsex, Nage, Ndeptno, DeptName, N.Tno, Ttype, Nceno, Nlevel " \
+                      "from `cs2329.nurse` N, `cs2329.dept` De, `cs2329.title` T " \
+                      "where N.Ndeptno = De.DeptNo and N.Tno = T.Tno and Nname LIKE '%%%s%%'" % HRInfo
+                columnCounter = 10
+            elif currentIndex == 2:
+                sql = "SELECT Phno, Phname, Phsex, Phage, Phdeptno, DeptName, P.Tno, Ttype, Phceno, Phtype " \
+                      "from `cs2329.pharmacist` P, `cs2329.dept` De, `cs2329.title` T " \
+                      "where P.Phdeptno = De.DeptNo and P.Tno = T.Tno and Phname LIKE '%%%s%%'" % HRInfo
+                columnCounter = 10
+            elif currentIndex == 3:
+                sql = "SELECT Cno, Cname, Csex, Cage, Cdeptno, DeptName, Ca.Tno, Ttype, Cceno " \
+                      "from `cs2329.cashier` Ca, `cs2329.dept` De, `cs2329.title` T " \
+                      "where Ca.Cdeptno = De.DeptNo and Ca.Tno = T.Tno and Cname LIKE '%%%s%%'" %HRInfo
+                columnCounter = 9
         else:
-            sql = "SELECT * from `%s`" % (tables[currentIndex][0])
+            if currentIndex == 0:
+                sql = "SELECT Dno, Dname, Dsex, Dage, Ddeptno, DeptName, Do.Tno, Ttype, Dregno, Disex, Dfee " \
+                      "from `cs2329.doctor` Do, `cs2329.dept` De, `cs2329.title` T " \
+                      "where Do.Ddeptno = De.DeptNo and Do.Tno = T.Tno"
+                columnCounter = 11
+            elif currentIndex == 1:
+                sql = "SELECT Nno, Nname, Nsex, Nage, Ndeptno, DeptName, N.Tno, Ttype, Nceno, Nlevel " \
+                      "from `cs2329.nurse` N, `cs2329.dept` De, `cs2329.title` T " \
+                      "where N.Ndeptno = De.DeptNo and N.Tno = T.Tno"
+                columnCounter = 10
+            elif currentIndex == 2:
+                sql = "SELECT Phno, Phname, Phsex, Phage, Phdeptno, DeptName, P.Tno, Ttype, Phceno, Phtype " \
+                      "from `cs2329.pharmacist` P, `cs2329.dept` De, `cs2329.title` T " \
+                      "where P.Phdeptno = De.DeptNo and P.Tno = T.Tno"
+                columnCounter = 10
+            elif currentIndex == 3:
+                sql = "SELECT Cno, Cname, Csex, Cage, Cdeptno, DeptName, Ca.Tno, Ttype, Cceno " \
+                      "from `cs2329.cashier` Ca, `cs2329.dept` De, `cs2329.title` T " \
+                      "where Ca.Cdeptno = De.DeptNo and Ca.Tno = T.Tno"
+                columnCounter = 9
 
         results = jdbc.dbQueryAll(sql)
-        columnCounter = len(jdbc.dbQueryHeaders("SELECT * from `%s`" % (tables[currentIndex][0])))
-
         self.ui.HRTable.setRowCount(0)
         self.ui.HRTable.clearContents()
         self.ui.HRTable.setColumnCount(columnCounter)
@@ -275,15 +390,22 @@ class Win_Root:
 
     def updateHRInfo(self, index, key):
         currentRow = self.ui.HRTable.currentRow()
-        tables = ['cs2329.doctor', 'cs2329.nurse', 'cs2329.pharmacist', 'cs2329.cashier']
         if index == 0:
-            sql = "SELECT * from `%s` where Dno=%s" % (tables[index], key)
+            sql = "SELECT Dno, Dname, Dsex, Dage, Ddeptno, DeptName, Do.Tno, Ttype, Dregno, Disex, Dfee " \
+                  "from `cs2329.doctor` Do, `cs2329.dept` De, `cs2329.title` T " \
+                  "where Do.Ddeptno = De.DeptNo and Do.Tno = T.Tno and Dno=%s" % key
         elif index == 1:
-            sql = "SELECT * from `%s` where Nno=%s" % (tables[index], key)
+            sql = "SELECT Nno, Nname, Nsex, Nage, Ndeptno, DeptName, N.Tno, Ttype, Nceno, Nlevel " \
+                  "from `cs2329.nurse` N, `cs2329.dept` De, `cs2329.title` T " \
+                  "where N.Ndeptno = De.DeptNo and N.Tno = T.Tno and Nno=%s" % key
         elif index == 2:
-            sql = "SELECT * from `%s` where Phno=%s" % (tables[index], key)
+            sql = "SELECT Phno, Phname, Phsex, Phage, Phdeptno, DeptName, P.Tno, Ttype, Phceno, Phtype " \
+                  "from `cs2329.pharmacist` P, `cs2329.dept` De, `cs2329.title` T " \
+                  "where P.Phdeptno = De.DeptNo and P.Tno = T.Tno and Phno=%s" % key
         elif index == 3:
-            sql = "SELECT * from `%s` where Cno=%s" % (tables[index], key)
+            sql = "SELECT Cno, Cname, Csex, Cage, Cdeptno, DeptName, Ca.Tno, Ttype, Cceno " \
+                  "from `cs2329.cashier` Ca, `cs2329.dept` De, `cs2329.title` T " \
+                  "where Ca.Cdeptno = De.DeptNo and Ca.Tno = T.Tno and Cno=%s" % key
         results = jdbc.dbQueryOne(sql)
         for i in range(len(results)):
             self.ui.HRTable.setItem(currentRow, i, QTableWidgetItem(str(results[i])))
@@ -358,7 +480,10 @@ class Win_insertPatient:
         pid = self.ui.pidEdit.text()
         pino = self.ui.pinoEdit.text()
         pmno = self.ui.pmnoEdit.text()
-        psex = self.ui.psexEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            psex = '男'
+        else:
+            psex = '女'
         pbd = self.ui.pbdEdit.text()
         padd = self.ui.paddEdit.text()
         mTel = self.ui.mTelEdit.text()
@@ -438,12 +563,18 @@ class Win_updateDoctor:
         [Dno, Dname, Dsex, Dage, Ddeptno, Tno, Dregno, Disex, Dfee] = jdbc.dbQueryOne(sql)
         self.ui.DnoEdit.setText(str(Dno))
         self.ui.DnameEdit.setText(str(Dname))
-        self.ui.DsexEdit.setText(str(Dsex))
+        if str(Dsex) == '男':
+            self.ui.rbtn_male.setChecked(True)
+        else:
+            self.ui.rbtn_female.setChecked(True)
         self.ui.DageEdit.setText(str(Dage))
         self.ui.DdeptnoEdit.setText(str(Ddeptno))
         self.ui.TnoEdit.setText(str(Tno))
         self.ui.DregnoEdit.setText(str(Dregno))
-        self.ui.DisexEdit.setText(str(Disex))
+        if str(Disex) == '是':
+            self.ui.rbtn_isex.setChecked(True)
+        else:
+            self.ui.rbtn_notex.setChecked(True)
         self.ui.DfeeEdit.setText(str(Dfee))
         # dno为主键，设置为只读
         self.ui.DnoEdit.setReadOnly(True)
@@ -454,12 +585,18 @@ class Win_updateDoctor:
     def updateInfo(self):
         dno = self.ui.DnoEdit.text()
         dname = self.ui.DnameEdit.text()
-        dsex = self.ui.DsexEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            dsex = '男'
+        else:
+            dsex = '女'
         dage = self.ui.DageEdit.text()
         ddeptno = self.ui.DdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
         dregno = self.ui.DregnoEdit.text()
-        disex = self.ui.DisexEdit.text()
+        if self.ui.rbtn_isex.isChecked():
+            disex = '是'
+        else:
+            disex = '否'
         dfee = self.ui.DfeeEdit.text()
         sql = "update `cs2329.doctor` set Dname='%s', Dsex='%s', Dage=%s, Ddeptno=%s, Tno=%s, Dregno='%s', Disex='%s', Dfee=%s where Dno = %s" % (dname, dsex, dage, ddeptno, tno, dregno, disex, dfee, dno)
         # 需要对HRTable数据进行更新
@@ -480,12 +617,18 @@ class Win_insertDoctor:
     def insertInfo(self):
         dno = self.ui.DnoEdit.text()
         dname = self.ui.DnameEdit.text()
-        dsex = self.ui.DsexEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            dsex = '男'
+        else:
+            dsex = '女'
         dage = self.ui.DageEdit.text()
         ddeptno = self.ui.DdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
         dregno = self.ui.DregnoEdit.text()
-        disex = self.ui.DisexEdit.text()
+        if self.ui.rbtn_isex.isChecked():
+            disex = '是'
+        else:
+            disex = '否'
         dfee = self.ui.DfeeEdit.text()
 
         sql = "insert into `cs2329.doctor` (Dno, Dname, Dsex, Dage, Ddeptno, Tno, Dregno, Disex, Dfee) values (%s, '%s', '%s', %s, %s, %s, '%s', '%s', %s)" % (
@@ -509,7 +652,10 @@ class Win_updateNurse:
         [Nno, Nname, Nsex, Nage, Ndeptno, Tno, Nceno, Nlevel] = jdbc.dbQueryOne(sql)
         self.ui.NnoEdit.setText(str(Nno))
         self.ui.NnameEdit.setText(str(Nname))
-        self.ui.NsexEdit.setText(str(Nsex))
+        if str(Nsex) == '男':
+            self.ui.rbtn_male.setChecked(True)
+        else:
+            self.ui.rbtn_female.setChecked(True)
         self.ui.NageEdit.setText(str(Nage))
         self.ui.NdeptnoEdit.setText(str(Ndeptno))
         self.ui.TnoEdit.setText(str(Tno))
@@ -524,7 +670,10 @@ class Win_updateNurse:
     def updateInfo(self):
         nno = self.ui.NnoEdit.text()
         nname = self.ui.NnameEdit.text()
-        nsex = self.ui.NsexEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            nsex = '男'
+        else:
+            nsex = '女'
         nage = self.ui.NageEdit.text()
         ndeptno = self.ui.NdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
@@ -549,7 +698,10 @@ class Win_insertNurse:
     def insertInfo(self):
         nno = self.ui.NnoEdit.text()
         nname = self.ui.NnameEdit.text()
-        nsex = self.ui.NsexEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            nsex = '男'
+        else:
+            nsex = '女'
         nage = self.ui.NageEdit.text()
         ndeptno = self.ui.NdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
@@ -577,7 +729,10 @@ class Win_updatePharmacist:
         [Phno, Phname, Phsex, Phage, Phdeptno, Tno, Phceno, Phtype] = jdbc.dbQueryOne(sql)
         self.ui.PhnoEdit.setText(str(Phno))
         self.ui.PhnameEdit.setText(str(Phname))
-        self.ui.PhsexEdit.setText(str(Phsex))
+        if str(Phsex) == '男':
+            self.ui.rbtn_male.setChecked(True)
+        else:
+            self.ui.rbtn_female.setChecked(True)
         self.ui.PhageEdit.setText(str(Phage))
         self.ui.PhdeptnoEdit.setText(str(Phdeptno))
         self.ui.TnoEdit.setText(str(Tno))
@@ -592,7 +747,10 @@ class Win_updatePharmacist:
     def updateInfo(self):
         phno = self.ui.PhnoEdit.text()
         phname = self.ui.PhnameEdit.text()
-        phsex = self.ui.PhsexEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            phsex = '男'
+        else:
+            phsex = '女'
         phage = self.ui.PhageEdit.text()
         phdeptno = self.ui.PhdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
@@ -617,7 +775,10 @@ class Win_insertPharmacist:
     def insertInfo(self):
         phno = self.ui.PhnoEdit.text()
         phname = self.ui.PhnameEdit.text()
-        phsex = self.ui.PhsexEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            phsex = '男'
+        else:
+            phsex = '女'
         phage = self.ui.PhageEdit.text()
         phdeptno = self.ui.PhdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
@@ -644,7 +805,10 @@ class Win_updateCashier:
         [Cno, Cname, Csex, Cage, Cdeptno, Tno, Cceno] = jdbc.dbQueryOne(sql)
         self.ui.CnoEdit.setText(str(Cno))
         self.ui.CnameEdit.setText(str(Cname))
-        self.ui.CsexEdit.setText(str(Csex))
+        if str(Csex) == '男':
+            self.ui.rbtn_male.setChecked(True)
+        else:
+            self.ui.rbtn_female.setChecked(True)
         self.ui.CageEdit.setText(str(Cage))
         self.ui.CdeptnoEdit.setText(str(Cdeptno))
         self.ui.TnoEdit.setText(str(Tno))
@@ -658,7 +822,10 @@ class Win_updateCashier:
     def updateInfo(self):
         cno = self.ui.CnoEdit.text()
         cname = self.ui.CnameEdit.text()
-        csex = self.ui.CsexEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            csex = '男'
+        else:
+            csex = '女'
         cage = self.ui.CageEdit.text()
         cdeptno = self.ui.CdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
@@ -682,7 +849,10 @@ class Win_insertCashier:
     def insertInfo(self):
         cno = self.ui.CnoEdit.text()
         cname = self.ui.CnameEdit.text()
-        csex = self.ui.CsexEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            csex = '男'
+        else:
+            csex = '女'
         cage = self.ui.CageEdit.text()
         cdeptno = self.ui.CdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()

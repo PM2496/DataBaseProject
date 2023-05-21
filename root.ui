@@ -93,7 +93,7 @@
        <cursorShape>ArrowCursor</cursorShape>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="page_1">
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -442,22 +442,12 @@
              </property>
              <item>
               <property name="text">
-               <string>医生</string>
+               <string>就诊</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>护士</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>药剂师</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>收银员</string>
+               <string>处方</string>
               </property>
              </item>
             </widget>
@@ -479,7 +469,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="treatTable">
+         <widget class="QTableWidget" name="TreatTable">
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
