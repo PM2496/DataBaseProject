@@ -13,3 +13,6 @@ class ShareInfo:
     insertPharmacistWin = None
     updateCashierWin = None
     insertCashierWin = None
+    Recipe_Detail_Win = None
+    FeeWin = None
+

@@ -1,8 +1,8 @@
-from PySide2.QtWidgets import QApplication, QMessageBox, QTableWidgetItem
+from PySide2.QtWidgets import QApplication, QMessageBox, QTableWidgetItem, QPushButton, QHBoxLayout, QWidget
 from PySide2.QtUiTools import QUiLoader
 from DBOperation.JDBC import JDBC
 from lib.share import ShareInfo
-from PySide2.QtCore import Signal, QObject
+from PySide2.QtCore import Signal, QObject, QSize
 
 
 # 自定义信号源对象类型，一定要继承自 QObject
@@ -16,6 +16,15 @@ class MySignals(QObject):
     # 0为就诊，1为处方，2为收费 ，str为主键
     updateTreat = Signal(int, str)
     insertTreat = Signal(int)
+    # 0为入库主单，1为入库从单，2为药品类型 ，str为主键
+    updateMedicine = Signal(int, str)
+    insertMedicine = Signal(int)
+    #
+    updateRegister = Signal(int)
+    insertRegister = Signal(int)
+    #
+    updateDept = Signal(int, str)
+    insertDept = Signal(int)
 
 
 class Win_Login:
@@ -62,12 +71,13 @@ class Win_Login:
         #     )
 
 
-class Win_Root:
+class Win_Root(QWidget):
     def __init__(self):
+        super(Win_Root, self).__init__()
         self.ui = QUiLoader().load('root.ui')
-        # 起始状态下无行被选中，更新和删除按钮设置为不可点击
-        self.ui.btn_patientUpdate.setEnabled(False)
-        self.ui.btn_patientDelete.setEnabled(False)
+        # # 起始状态下无行被选中，更新和删除按钮设置为不可点击
+        # self.ui.btn_patientUpdate.setEnabled(False)
+        # self.ui.btn_patientDelete.setEnabled(False)
         # 绑定各种事件
         self.ui.actionQuit.triggered.connect(self.onSignOut)
         self.ui.listWidget.currentRowChanged.connect(self.display)
@@ -95,6 +105,26 @@ class Win_Root:
         # self.ui.btn_TreatDelete.clicked.connect(self.deleteTreat)
         self.ui.TreatComboBox.currentIndexChanged.connect(self.TreatDisplay)
         self.ui.TreatTable.cellClicked.connect(self.setTreatBtn)
+        # 药品表格控件
+        # self.ui.btn_medicineQuery.clicked.connect(self.queryMedicine)
+        # self.ui.btn_medicineUpdate.clicked.connect(self.updateMedicine)
+        # self.ui.btn_medicineInsert.clicked.connect(self.insertMedicine)
+        # self.ui.btn_medicineDelete.clicked.connect(self.deleteMedicine)
+        self.ui.MedicineComboBox.currentIndexChanged.connect(self.MedicineDisplay)
+        self.ui.MedicineTable.cellClicked.connect(self.setMedicineBtn)
+        # 挂号表格控件
+        # self.ui.btn_registerQuery.clicked.connect(self.queryRegister)
+        # self.ui.btn_registerUpdate.clicked.connect(self.updateRegister)
+        # self.ui.btn_registerInsert.clicked.connect(self.insertRegister)
+        # self.ui.btn_registerDelete.clicked.connect(self.deleteRegister)
+        self.ui.RegisterTable.cellClicked.connect(self.setRegisterBtn)
+        # 部门表格控件
+        # self.ui.btn_deptQuery.clicked.connect(self.queryDept)
+        # self.ui.btn_deptUpdate.clicked.connect(self.updateDept)
+        # self.ui.btn_deptInsert.clicked.connect(self.insertDept)
+        # self.ui.btn_deptDelete.clicked.connect(self.deleteDept)
+        self.ui.DeptComboBox.currentIndexChanged.connect(self.DeptDisplay)
+        self.ui.DeptTable.cellClicked.connect(self.setDeptBtn)
         # 信号绑定
         mySignals.updatePatient.connect(self.updatePatientInfo)
         mySignals.insertPatient.connect(self.patientDisplay)
@@ -102,14 +132,25 @@ class Win_Root:
         mySignals.updateHR.connect(self.updateHRInfo)
         mySignals.insertHR.connect(self.HRDisplay)
 
-        # mySignals.updateTreat.conncet(self.updateTreatInfo)
-        # mySignals.insertTreat.connect(self.treatDisplay)
+        # mySignals.updateTreat.connect(self.updateTreatInfo)
+        # mySignals.insertTreat.connect(self.TreatDisplay)
+
+        # mySignals.updateMedicine.connect(self.updateMedicineInfo)
+        # mySignals.insertMedicine.connect(self.MedicineDisplay)
+
+        # mySignals.updateRegister.connect(self.updateRegisterInfo)
+        # mySignals.insertRegister.connect(self.RegisterDisplay)
+
+        # mySignals.updateDept.connect(self.updateDept)
+        # mySignals.insertDept.connect(self.DeptDisplay)
 
     def onSignOut(self):
         self.ui.close()
         ShareInfo.loginWin.ui.show()
 
     def updateTable(self, tableName, table):
+        tableHeaders = None
+        sql = None
         if tableName == 'cs2329.patient':
             tableHeaders = ['患者编号', '姓名', '身份证号', '社保号', '医疗卡号', '性别', '生日', '地址']
             sql = "SELECT * from `cs2329.patient`"
@@ -145,9 +186,39 @@ class Win_Root:
                   "where Di.Pno = P.Pno and Di.Dno = Do.Dno"
         elif tableName == 'cs2329.recipe_master':
             tableHeaders = ['处方编号', '所属部门编号', '所属部门', '医生编号', '医生姓名', '患者编号', '患者姓名', '年龄', '处方时间', '处方药品清单', '费用']
-            sql = "SELECT R.RMno, R.DeptNo, DeptName, R.Dno, Dname, R.Pno, Pname, RMage, RMtime, RDno, Fno " \
-                  "from `cs2329.recipe_master` R, `cs2329.dept` De, `cs2329.patient` P, `cs2329.doctor` Do, `cs2329.recipe_detail` RD, `cs2329.fee` F " \
-                  "where R.DeptNo = De.DeptNo and R.Dno = Do.Dno and R.Pno = P.Pno and R.RMno = RD.RMno and R.RMno = F.Rno"
+            sql = "SELECT R.RMno, R.DeptNo, DeptName, R.Dno, Dname, R.Pno, Pname, RMage, RMtime " \
+                  "from `cs2329.recipe_master` R, `cs2329.dept` De, `cs2329.patient` P, `cs2329.doctor` Do " \
+                  "where R.DeptNo = De.DeptNo and R.Dno = Do.Dno and R.Pno = P.Pno"
+        elif tableName == 'cs2329.godown_entry':
+            tableHeaders = ['主单编号', '入库时间', '主单名称']
+            sql = "SELECT * from `cs2329.godown_entry` "
+        elif tableName == 'cs2329.godown_slave':
+            tableHeaders = ['从单编号', '所属主单编号', '主单名称', '药品编号', '药品名称', '数量', '数量单位', '批次号', '价格', '有效期']
+            sql = "SELECT Gs.GSno, Gs.GMno, GMname, Gs.Mno, Mname, GSnumber, GSunit, GSbatch, GSprice, GSexpdate " \
+                  "from `cs2329.godown_slave` Gs, `cs2329.godown_entry` Ge, `cs2329.medicine` M " \
+                  "where Gs.GMno = Ge.GMno and Gs.Mno = M.Mno"
+        elif tableName == 'cs2329.medicine':
+            tableHeaders = ['药品编号', '从单编号', '药品名称', '价格', '包装单位', '药品类型']
+            sql = "SELECT * from `cs2329.medicine` "
+        elif tableName == 'cs2329.register_form':
+            tableHeaders = ['挂号单编号', '挂号科室', '科室', '挂号医生', '医生姓名', '挂号患者', '患者姓名', '挂号收费员', '收费员姓名', '挂号时间', '预约就诊时间', '挂号费', '备注']
+            sql = "SELECT RFno, RFdept, DeptName, RFdoctor, Dname, RFpatient, Pname, RFcashier, Cname, RFtime, RFvisittime, RFfee, RFnotes " \
+                  "from `cs2329.register_form` Rf, `cs2329.dept` De, `cs2329.doctor` Do, `cs2329.patient` P, `cs2329.cashier` C " \
+                  "where Rf.RFdept = De.DeptNo and Rf.RFdoctor = Do.Dno and Rf.RFpatient = P.Pno and Rf.RFcashier = C.Cno"
+        elif tableName == 'cs2329.dept':
+            tableHeaders = ['部门编号', '部门名称', '父级部门编号', '父级部门名称', '部门经理编号', '部门经理名称']
+            sql = "SELECT De.DeptNo, De.DeptName, De.ParentDeptNo, PD.DeptName, De.Manager, Dname " \
+                  "from `cs2329.dept` De, `cs2329.dept` PD, `cs2329.doctor` D " \
+                  "where De.ParentDeptNo = PD.DeptNo and De.Manager = D.Dno"
+        elif tableName == 'cs2329.title':
+            tableHeaders = ['职称编号', '工资类型', '工资', '职称类型', '所属行业']
+            sql = "SELECT Tno, T.Sno, Snumber, Ttype, Ttrade " \
+                  "from `cs2329.title` T, `cs2329.salary` S " \
+                  "where T.Sno = S.Sno"
+        elif tableName == 'cs2329.salary':
+            tableHeaders = ['工资编号', '工资等级', '工资数量']
+            sql = "SELECT Sno, Slevel, Snumber " \
+                  "from `cs2329.salary` "
 
         results = jdbc.dbQueryAll(sql)
         table.setRowCount(0)
@@ -156,10 +227,60 @@ class Win_Root:
             columnCounter = len(tableHeaders)
             table.setColumnCount(columnCounter)
             table.setHorizontalHeaderLabels(tableHeaders)
-            for i in range(len(results)):
-                table.insertRow(i)
-                for j in range(columnCounter):
-                    table.setItem(i, j, QTableWidgetItem(str(results[i][j])))
+            if tableName == 'cs2329.recipe_master':
+                columnCounter = columnCounter - 2  # 后两列用于添加按钮
+                for i in range(len(results)):
+                    table.insertRow(i)
+                    for j in range(columnCounter):
+                        table.setItem(i, j, QTableWidgetItem(str(results[i][j])))
+                    # 创建按钮
+                    btn_recipe_detail = QPushButton("药品详情")
+                    btn_fee = QPushButton("费用详情")
+                    # 编辑按钮样式
+                    btn_recipe_detail.setFixedSize(QSize(120, 40))
+                    btn_fee.setFixedSize(QSize(120, 40))
+                    btn_recipe_detail.setStyleSheet(
+                        "QPushButton{color:white;background-color:rgb(51,204,255);font-family:黑体;border-radius: 15px;}"
+                        "QPushButton:pressed{background-color:rgb(51,129,172)}")
+                    btn_fee.setStyleSheet(
+                        "QPushButton{color:white;background-color:rgb(51,204,255);font-family:黑体;border-radius: 15px;}"
+                        "QPushButton:pressed{background-color:rgb(51,129,172)}")
+                    btn_recipe_detail.clicked.connect(self.showRecipe_Detail_Info)
+                    btn_fee.clicked.connect(self.showFee_Info)
+                    vLayout1 = QHBoxLayout()
+                    vLayout2 = QHBoxLayout()
+                    widget_btn1 = QWidget()
+                    widget_btn2 = QWidget()
+                    vLayout1.addWidget(btn_recipe_detail)  # 布局中添加了控件
+                    vLayout2.addWidget(btn_fee)
+                    widget_btn1.setLayout(vLayout1)  # Widget中添加布局
+                    widget_btn2.setLayout(vLayout2)
+                    table.setCellWidget(i, columnCounter, widget_btn1)  # 表格中添加Widget
+                    table.setCellWidget(i, columnCounter+1, widget_btn2)
+            else:
+                for i in range(len(results)):
+                    table.insertRow(i)
+                    for j in range(columnCounter):
+                        table.setItem(i, j, QTableWidgetItem(str(results[i][j])))
+    # 展示处方药品详情
+    def showRecipe_Detail_Info(self):
+        button = self.sender()
+        if button:
+            # 确定按钮所在行号
+            row = self.ui.TreatTable.indexAt(button.parent().pos()).row()
+            rmno = self.ui.TreatTable.item(row, 0).text()
+            ShareInfo.Recipe_Detail_Win = Win_Recipe_Detail(rmno)
+            ShareInfo.Recipe_Detail_Win.ui.show()
+
+    # 展示处方药品详情
+    def showFee_Info(self):
+        button = self.sender()
+        if button:
+            # 确定按钮所在行号
+            row = self.ui.TreatTable.indexAt(button.parent().pos()).row()
+            rmno = self.ui.TreatTable.item(row, 0).text()
+            ShareInfo.FeeWin = Win_Fee(rmno)
+            ShareInfo.FeeWin.ui.show()
 
     def patientDisplay(self, index):
         self.resetBtn(0)
@@ -179,10 +300,30 @@ class Win_Root:
         tableName = tables[index]
         self.updateTable(tableName, self.ui.TreatTable)
 
+    def MedicineDisplay(self, index):
+        self.resetBtn(3)
+        tables = ['cs2329.godown_entry', 'cs2329.godown_slave', 'cs2329.medicine']
+        tableName = tables[index]
+        self.updateTable(tableName, self.ui.MedicineTable)
+
+    def RegisterDisplay(self):
+        self.resetBtn(4)
+        tableName = 'cs2329.register_form'
+        self.updateTable(tableName, self.ui.RegisterTable)
+
+    def DeptDisplay(self, index):
+        self.resetBtn(5)
+        tables = ['cs2329.dept', 'cs2329.title', 'cs2329.salary']
+        tableName = tables[index]
+        self.updateTable(tableName, self.ui.DeptTable)
+
     # index = 0，初始化
     # index = 1，患者管理
     # index = 2，人事管理（医生，护士，药剂师，收银员）
     # index = 3，就诊管理（就诊表，处方表，药品表，费用表）
+    # index = 4，药品管理（入库，出库，药品类型）
+    # index = 5，挂号管理
+    # index = 6，部门管理（组织机构，职称，工资）
     def display(self, index):
         self.ui.stackedWidget.setCurrentIndex(index)
         if index >= 1:
@@ -195,6 +336,14 @@ class Win_Root:
             if index == 3:
                 self.ui.TreatComboBox.setCurrentIndex(0)
                 self.TreatDisplay(0)
+            if index == 4:
+                self.ui.MedicineComboBox.setCurrentIndex(0)
+                self.MedicineDisplay(0)
+            if index == 5:
+                self.RegisterDisplay()
+            if index == 6:
+                self.ui.DeptComboBox.setCurrentIndex(0)
+                self.DeptDisplay(0)
 
     def createDB(self):
         self.ui.Info.appendPlainText("开始创建表")
@@ -220,12 +369,29 @@ class Win_Root:
         self.ui.btn_HRDelete.setEnabled(True)
 
     def setTreatBtn(self):
+        # print(self.ui.TreatTable.currentRow())
         self.ui.btn_TreatUpdate.setEnabled(True)
         self.ui.btn_TreatDelete.setEnabled(True)
+
+    def setMedicineBtn(self):
+        self.ui.btn_medicineUpdate.setEnabled(True)
+        self.ui.btn_medicineDelete.setEnabled(True)
+
+    def setRegisterBtn(self):
+        self.ui.btn_registerUpdate.setEnabled(True)
+        self.ui.btn_registerDelete.setEnabled(True)
+
+    def setDeptBtn(self):
+        self.ui.btn_deptUpdate.setEnabled(True)
+        self.ui.btn_deptDelete.setEnabled(True)
+
     # 重置按钮
     # index用于区分是哪个表格的按钮
     # 0: patientTable
     # 1: HRTable
+    # 2: TreatTable
+    # 3: MedicineTable
+    # 4: RegisterTable
     def resetBtn(self, index):
         if index == 0:
             self.ui.btn_patientUpdate.setEnabled(False)
@@ -236,6 +402,15 @@ class Win_Root:
         if index == 2:
             self.ui.btn_TreatUpdate.setEnabled(False)
             self.ui.btn_TreatDelete.setEnabled(False)
+        if index == 3:
+            self.ui.btn_medicineUpdate.setEnabled(False)
+            self.ui.btn_medicineDelete.setEnabled(False)
+        if index == 4:
+            self.ui.btn_registerUpdate.setEnabled(False)
+            self.ui.btn_registerDelete.setEnabled(False)
+        if index == 5:
+            self.ui.btn_deptUpdate.setEnabled(False)
+            self.ui.btn_deptDelete.setEnabled(False)
 
     def queryPatient(self):
         patientInfo = self.ui.patientInfo.text()
@@ -866,6 +1041,57 @@ class Win_insertCashier:
             self.ui.close()
 
     def quitInfo(self):
+        self.ui.close()
+
+
+class Win_Recipe_Detail:
+    def __init__(self, rmno):
+        self.ui = QUiLoader().load('RecipeDetail.ui')
+        self.RMno = rmno
+        self.ui.btn_close.clicked.connect(self.close)
+
+        sql = "SELECT RDno, RMno, R.Mno, Mname, RDprice, RDnumber, RDunit " \
+              "from `cs2329.recipe_detail` R, `cs2329.medicine` M " \
+              "where R.RMno = %s and R.Mno = M.Mno" % self.RMno
+        [RDno, RMno, Mno, Mname, RDprice, RDnumber, RDunit] = jdbc.dbQueryOne(sql)
+        self.ui.RDnoEdit.setText(str(RDno))
+        self.ui.RMnoEdit.setText(str(RMno))
+        self.ui.MnoEdit.setText(str(Mno))
+        self.ui.MnameEdit.setText(str(Mname))
+        self.ui.RDpriceEdit.setText(str(RDprice))
+        self.ui.RDnumberEdit.setText(str(RDnumber))
+        self.ui.RDunitEdit.setText(str(RDunit))
+
+    def close(self):
+        self.ui.close()
+
+
+class Win_Fee:
+    def __init__(self, rmno):
+        self.ui = QUiLoader().load('Fee.ui')
+        self.RMno = rmno
+        self.ui.btn_close.clicked.connect(self.close)
+
+        sql = "SELECT Fno, Fnumber, Fdate, DGno, F.Rno, F.Cno, Cname, F.Pno, Pname, Do.Dno, Dname, FRecipefee, Fdiscount, Fsum " \
+              "from `cs2329.fee` F, `cs2329.cashier` C, `cs2329.doctor` Do, `cs2329.recipe_master` R, `cs2329.patient` P " \
+              "where F.Rno = %s and F.Cno = C.Cno and F.Pno = P.Pno and R.RMno=%s and R.Dno = Do.Dno" % (self.RMno, self.RMno)
+        [Fno, Fnumber, Fdate, DGno, Rno, Cno, Cname, Pno, Pname, Dno, Dname, FRecipefee, Fdiscount, Fsum] = jdbc.dbQueryOne(sql)
+        self.ui.FnoEdit.setText(str(Fno))
+        self.ui.FnumberEdit.setText(str(Fnumber))
+        self.ui.FdateEdit.setText(str(Fdate))
+        self.ui.DGnoEdit.setText(str(DGno))
+        self.ui.RnoEdit.setText(str(Rno))
+        self.ui.CnoEdit.setText(str(Cno))
+        self.ui.CnameEdit.setText(str(Cname))
+        self.ui.PnoEdit.setText(str(Pno))
+        self.ui.PnameEdit.setText(str(Pname))
+        self.ui.DnoEdit.setText(str(Dno))
+        self.ui.DnameEdit.setText(str(Dname))
+        self.ui.FRecipefeeEdit.setText(str(FRecipefee))
+        self.ui.FdiscountEdit.setText(str(Fdiscount))
+        self.ui.FsumEdit.setText(str(Fsum))
+
+    def close(self):
         self.ui.close()
 
 

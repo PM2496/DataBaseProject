@@ -466,6 +466,8 @@ class JDBC:
             "insert into `cs2329.recipe_detail` values(32, 1458878, 315189, 360, 4, '盒')",
             "insert into `cs2329.recipe_detail` values(47, 1284041, 315977, 14, 1, '片')",
             "insert into `cs2329.recipe_detail` values(89, 1282317, 316910, 2.5, 10, '粒')",
+            "insert into `cs2329.recipe_detail` values(12, 1283998, 317660, 14, 3, '盒')",
+            "insert into `cs2329.recipe_detail` values(13, 1284256, 315501, 15, 2, '片')",
             ]
         for sql in sqls:
             if not self.dbInsert(sql):
@@ -529,14 +531,14 @@ class JDBC:
             return None
 
     def dbQueryAll(self, sql):
-        try:
-            self.cursor.execute(sql)
-            queryResults = self.cursor.fetchall()
-            results = [list(result) for result in queryResults]
-            return results
-        except:
-            print("查询失败")
-            return None
+        # try:
+        self.cursor.execute(sql)
+        queryResults = self.cursor.fetchall()
+        results = [list(result) for result in queryResults]
+        return results
+        # except:
+        #     print("查询失败")
+        #     return None
 
     def dbQueryOne(self, sql):
         try:
@@ -544,7 +546,6 @@ class JDBC:
             queryResult = self.cursor.fetchone()
             result = list(queryResult)
             return result
-
         except:
             print("查询失败")
             return None
