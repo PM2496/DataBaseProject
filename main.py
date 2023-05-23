@@ -25,50 +25,76 @@ class MySignals(QObject):
     #
     updateDept = Signal(int, str)
     insertDept = Signal(int)
+    #
+    updateUser = Signal(int, str)
+    insert = Signal(int)
 
 
 class Win_Login:
     def __init__(self):
         self.ui = QUiLoader().load('login.ui')
-        self.ui.btn_login.clicked.connect(self.onSignIn)
-        self.ui.edt_username.returnPressed.connect(self.onSignIn)
-        self.ui.edt_password.returnPressed.connect(self.onSignIn)
+        self.ui.stackedWidget.setCurrentIndex(0)
+        self.ui.rbtn_root.setChecked(True)
+        self.ui.rbtn_root.clicked.connect(lambda: self.changeIndex(0))
+        self.ui.rbtn_doctor.clicked.connect(lambda: self.changeIndex(1))
+        self.ui.rbtn_patient.clicked.connect(lambda: self.changeIndex(2))
+        self.ui.btn_rootLogin.clicked.connect(self.onSignIn)
+        self.ui.btn_doctorLogin.clicked.connect(self.onSignIn)
+        self.ui.btn_patientLogin.clicked.connect(self.onSignIn)
+        # self.ui.btn_patientRegister.clicked.connect(self.onRegister)
+        self.ui.usernameEdit.returnPressed.connect(self.onSignIn)
+        self.ui.passwordEdit.returnPressed.connect(self.onSignIn)
+
+    def changeIndex(self, index):
+        self.ui.stackedWidget.setCurrentIndex(index)
 
     def onSignIn(self):
-        self.ui.hide()
-        self.ui.edt_password.clear()
-        ShareInfo.rootWin = Win_Root()
-        ShareInfo.rootWin.ui.show()
-        return
-        # if not self.ui.edt_username.text() or not self.ui.edt_password.text():
-        #     QMessageBox.warning(
-        #         self.ui,
-        #         '输入完整',
-        #         '请输入用户名和密码'
-        #     )
-        #     return
-
+        # self.ui.hide()
+        # self.ui.edt_password.clear()
+        # ShareInfo.rootWin = Win_Root()
+        # ShareInfo.rootWin.ui.show()
+        # return
+        if not self.ui.usernameEdit.text() or not self.ui.passwordEdit.text():
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入用户名和密码'
+            )
+            return
+        tables = ['cs2329.rootUser', 'cs2329.doctorUser', 'cs2329.patientUser']
+        index = 0
+        if self.ui.rbtn_doctor.isChecked():
+            index = 1
+        if self.ui.rbtn_patient.isChecked():
+            index = 2
         # 注意这里的%s外要加上‘’， 否则会报错
-        # sql = "select * from ROOT where USERNAME='%s' and PASSWORD='%s'" % (self.ui.edt_username.text(), self.ui.edt_password.text())
+        sql = "select * from `%s` where USERNAME='%s' and PASSWORD='%s'" % (tables[index], self.ui.usernameEdit.text(), self.ui.passwordEdit.text())
 
-        # result = jdbc.dbQueryOne(sql)
-        # # # 测试
-        # # result = True
-        # if result:
-        #     # username = result[0]
-        #     # password = result[1]
-        #     # print("username=%s, password=%s" % (username, password))
-        #     # 登录窗口隐藏，登录框密码清空
-        #     self.ui.hide()
-        #     self.ui.edt_password.clear()
-        #     ShareInfo.rootWin = Win_Root()
-        #     ShareInfo.rootWin.ui.show()
-        # else:
-        #     QMessageBox.critical(
-        #         self.ui,
-        #         '登录失败',
-        #         '请检查用户名和密码'
-        #     )
+        result = jdbc.dbQueryOne(sql)
+        # # 测试
+        # result = True
+        if result:
+            # username = result[0]
+            # password = result[1]
+            # print("username=%s, password=%s" % (username, password))
+            # 登录窗口隐藏，登录框密码清空
+            self.ui.hide()
+            self.ui.passwordEdit.clear()
+            if index == 0:
+                ShareInfo.rootWin = Win_Root()
+                ShareInfo.rootWin.ui.show()
+            if index == 1:
+                ShareInfo.doctorWin = Win_Doctor(result[0])
+                ShareInfo.doctorWin.ui.show()
+            if index == 2:
+                ShareInfo.patientWin = Win_Patient(result[0])
+                ShareInfo.patientWin.ui.show()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '登录失败',
+                '请检查用户名和密码'
+            )
 
 
 class Win_Root(QWidget):
@@ -125,6 +151,13 @@ class Win_Root(QWidget):
         # self.ui.btn_deptDelete.clicked.connect(self.deleteDept)
         self.ui.DeptComboBox.currentIndexChanged.connect(self.DeptDisplay)
         self.ui.DeptTable.cellClicked.connect(self.setDeptBtn)
+        # 用户表格控件
+        # self.ui.btn_userQuery.clicked.connect(self.queryUser)
+        # self.ui.btn_userUpdate.clicked.connect(self.updateUser)
+        # self.ui.btn_userInsert.clicked.connect(self.insertUser)
+        # self.ui.btn_userDelete.clicked.connect(self.deleteUser)
+        self.ui.UserComboBox.currentIndexChanged.connect(self.UserDisplay)
+        self.ui.UserTable.cellClicked.connect(self.setUserBtn)
         # 信号绑定
         mySignals.updatePatient.connect(self.updatePatientInfo)
         mySignals.insertPatient.connect(self.patientDisplay)
@@ -143,6 +176,9 @@ class Win_Root(QWidget):
 
         # mySignals.updateDept.connect(self.updateDept)
         # mySignals.insertDept.connect(self.DeptDisplay)
+
+        # mySignals.updateUser.connect(self.updateUser)
+        # mySignals.insertUser.connect(self.UserDisplay)
 
     def onSignOut(self):
         self.ui.close()
@@ -219,7 +255,19 @@ class Win_Root(QWidget):
             tableHeaders = ['工资编号', '工资等级', '工资数量']
             sql = "SELECT Sno, Slevel, Snumber " \
                   "from `cs2329.salary` "
-
+        elif tableName == 'cs2329.rootUser':
+            tableHeaders = ['用户名', '密码']
+            sql = "SELECT * from `cs2329.rootUser` "
+        elif tableName == 'cs2329.patientUser':
+            tableHeaders = ['用户名', '密码', '患者编号', '患者姓名']
+            sql = "SELECT USERNAME, PASSWORD, U.Pno, Pname " \
+                  "from `cs2329.patientUser` U, `cs2329.patient` P " \
+                  "where U.Pno = P.Pno"
+        elif tableName == 'cs2329.doctorUser':
+            tableHeaders = ['用户名', '密码', '医生编号', '医生姓名']
+            sql = "SELECT USERNAME, PASSWORD, U.Dno, Dname " \
+                  "from `cs2329.doctorUser` U, `cs2329.doctor` D " \
+                  "where U.Dno = D.Dno"
         results = jdbc.dbQueryAll(sql)
         table.setRowCount(0)
         table.clearContents()
@@ -317,6 +365,12 @@ class Win_Root(QWidget):
         tableName = tables[index]
         self.updateTable(tableName, self.ui.DeptTable)
 
+    def UserDisplay(self, index):
+        self.resetBtn(6)
+        tables = ['cs2329.rootUser', 'cs2329.doctorUser', 'cs2329.patientUser']
+        tableName = tables[index]
+        self.updateTable(tableName, self.ui.UserTable)
+
     # index = 0，初始化
     # index = 1，患者管理
     # index = 2，人事管理（医生，护士，药剂师，收银员）
@@ -324,6 +378,7 @@ class Win_Root(QWidget):
     # index = 4，药品管理（入库，出库，药品类型）
     # index = 5，挂号管理
     # index = 6，部门管理（组织机构，职称，工资）
+    # index = 7，用户管理（管理员，患者，医生）
     def display(self, index):
         self.ui.stackedWidget.setCurrentIndex(index)
         if index >= 1:
@@ -344,6 +399,9 @@ class Win_Root(QWidget):
             if index == 6:
                 self.ui.DeptComboBox.setCurrentIndex(0)
                 self.DeptDisplay(0)
+            if index == 7:
+                self.ui.UserComboBox.setCurrentIndex(0)
+                self.UserDisplay(0)
 
     def createDB(self):
         self.ui.Info.appendPlainText("开始创建表")
@@ -385,6 +443,10 @@ class Win_Root(QWidget):
         self.ui.btn_deptUpdate.setEnabled(True)
         self.ui.btn_deptDelete.setEnabled(True)
 
+    def setUserBtn(self):
+        self.ui.btn_userUpdate.setEnabled(True)
+        self.ui.btn_userDelete.setEnabled(True)
+
     # 重置按钮
     # index用于区分是哪个表格的按钮
     # 0: patientTable
@@ -411,6 +473,9 @@ class Win_Root(QWidget):
         if index == 5:
             self.ui.btn_deptUpdate.setEnabled(False)
             self.ui.btn_deptDelete.setEnabled(False)
+        if index == 6:
+            self.ui.btn_userUpdate.setEnabled(False)
+            self.ui.btn_userDelete.setEnabled(False)
 
     def queryPatient(self):
         patientInfo = self.ui.patientInfo.text()
@@ -607,6 +672,21 @@ class Win_Root(QWidget):
 
         jdbc.dbDelete(sql)
         self.HRDisplay(currentIndex)
+
+
+class Win_Doctor(QWidget):
+    def __init__(self, dno):
+        super(Win_Doctor, self).__init__()
+        self.ui = QUiLoader().load('doctor.ui')
+        self.Dno = dno
+
+
+class Win_Patient(QWidget):
+    def __init__(self, pno):
+        super(Win_Patient, self).__init__()
+        self.ui = QUiLoader().load('patient.ui')
+        self.Pno = pno
+        self.ui.btn_patient
 
 
 class Win_updatePatient:
