@@ -1,3 +1,5 @@
+import datetime
+
 from PySide2.QtWidgets import QApplication, QMessageBox, QTableWidgetItem, QPushButton, QHBoxLayout, QWidget
 from PySide2.QtUiTools import QUiLoader
 from DBOperation.JDBC import JDBC
@@ -28,6 +30,7 @@ class MySignals(QObject):
     #
     updateUser = Signal(int, str)
     insert = Signal(int)
+    #
 
 
 class Win_Login:
@@ -679,14 +682,186 @@ class Win_Doctor(QWidget):
         super(Win_Doctor, self).__init__()
         self.ui = QUiLoader().load('doctor.ui')
         self.Dno = dno
+        sql = "SELECT Dname from `cs2329.doctor` where Dno=%s" % self.Dno
+        [Dname] = jdbc.dbQueryOne(sql)
+        self.ui.Info.appendPlainText("欢迎您，"+Dname)
+
+        self.ui.actionQuit.triggered.connect(self.onSignOut)
+        self.ui.listWidget.currentRowChanged.connect(self.display)
+
+    def onSignOut(self):
+        self.ui.close()
+        ShareInfo.loginWin.ui.show()
+
+    def display(self, index):
+        self.ui.stackedWidget.setCurrentIndex(index)
+        if index >= 1:
+            if index == 1:
+                return
 
 
 class Win_Patient(QWidget):
     def __init__(self, pno):
         super(Win_Patient, self).__init__()
         self.ui = QUiLoader().load('patient.ui')
+        self.ui.pnameEdit.setReadOnly(False) # 姓名不可更改
         self.Pno = pno
-        self.ui.btn_patient
+        self.DeptInfo = None
+        self.DoctorInfo = None
+        self.CashierInfo = None
+        self.resetUserFormAndBtn()
+
+        sql = "SELECT Pname from `cs2329.patient` where Pno=%s" % self.Pno
+        [pname] = jdbc.dbQueryOne(sql)
+        self.ui.Info.appendPlainText("欢迎您，"+pname)
+        # 绑定事件
+        self.ui.actionQuit.triggered.connect(self.onSignOut)
+        self.ui.listWidget.currentRowChanged.connect(self.display)
+
+        self.ui.btn_patientUserUpdate.clicked.connect(self.setUserFormAndBtn)
+        self.ui.btn_accurate.clicked.connect(self.updateUserForm)
+        self.ui.btn_register.clicked.connect(self.register)
+        self.ui.deptComboBox.currentIndexChanged.connect(self.updateDoctorComboBox)
+        self.ui.doctorComboBox.currentIndexChanged.connect(self.updateFee)
+
+    def resetUserFormAndBtn(self):
+        self.ui.pinoEdit.setReadOnly(True)
+        self.ui.pmnoEdit.setReadOnly(True)
+        self.ui.paddEdit.setReadOnly(True)
+        self.ui.ptelEdit.setReadOnly(True)
+        self.ui.btn_patientUserUpdate.setEnabled(True)
+        self.ui.btn_accurate.setEnabled(False)
+
+    def setUserFormAndBtn(self):
+        self.ui.pinoEdit.setReadOnly(False)
+        self.ui.pmnoEdit.setReadOnly(False)
+        self.ui.paddEdit.setReadOnly(False)
+        self.ui.ptelEdit.setReadOnly(False)
+        self.ui.btn_patientUserUpdate.setEnabled(False)
+        self.ui.btn_accurate.setEnabled(True)
+
+    def onSignOut(self):
+        self.ui.close()
+        ShareInfo.loginWin.ui.show()
+
+    # def updateTable(self, tableName, table):
+    #     tableHeaders = None
+    #     sql = None
+    #     if tableName == '':
+    #         tableHeaders = []
+    #         sql = ""
+    #     elif tableName == '':
+    #         tableHeaders = []
+    #         sql = ""
+    #     results = jdbc.dbQueryAll(sql)
+    #     table.setRowCount(0)
+    #     table.clearContents()
+
+    def display(self, index):
+        self.ui.stackedWidget.setCurrentIndex(index)
+        if index >= 1:
+            if index == 1:
+                self.resetUserFormAndBtn()
+                self.userFormDisplay()
+            if index == 2:
+                self.registerDisplay()
+            if index == 3:
+                self.recordDisplay()
+            if index == 4:
+                self.payDisplay()
+
+    def userFormDisplay(self):
+        sql = "SELECT Pname, Pino, Pmno, Padd, Ptelcode " \
+              "from `cs2329.patient` Pa, `cs2329.patient_tel` Pt " \
+              "where Pa.Pno=%s and Pt.Pno=%s and Pt.Pteltype='%s'" % (self.Pno, self.Pno, '手机')
+        [Pname, Pino, Pmno, Padd, Ptelcode] = jdbc.dbQueryOne(sql)
+        self.ui.pnameEdit.setText(str(Pname))
+        self.ui.pinoEdit.setText(str(Pino))
+        self.ui.pmnoEdit.setText(str(Pmno))
+        self.ui.paddEdit.setText(str(Padd))
+        self.ui.ptelEdit.setText(str(Ptelcode))
+
+    def updateUserForm(self):
+        pino = self.ui.pinoEdit.text()
+        pmno = self.ui.pmnoEdit.text()
+        padd = self.ui.paddEdit.text()
+        ptelcode = self.ui.ptelEdit.text()
+        sql = "UPDATE `cs2329.patient` Pa, `cs2329.patient_tel` Pt " \
+              "set Pa.Pino = '%s', Pa.Pmno = '%s', Pa.Padd = '%s', Pt.Ptelcode = '%s' " \
+              "where Pa.Pno = %s and Pt.Pno = %s" % (pino, pmno, padd, ptelcode, self.Pno, self.Pno)
+        jdbc.dbUpdate(sql)
+        self.resetUserFormAndBtn()
+
+    def updateDoctorComboBox(self, index):
+        if index == 0 or index == -1:
+            self.ui.doctorComboBox.setEnabled(False)
+        else:
+            self.ui.doctorComboBox.clear()
+            self.ui.doctorComboBox.addItem("请选择医生")
+            self.ui.doctorComboBox.setEnabled(True)
+            deptNo = self.DeptInfo[index-1][0]
+            sql = "SELECT Dno, Dname, Dfee from `cs2329.doctor` D where D.Ddeptno=%s" % deptNo
+            self.DoctorInfo = jdbc.dbQueryAll(sql)
+            for doctor in self.DoctorInfo:
+                self.ui.doctorComboBox.addItem(doctor[1])
+
+    def updateFee(self, index):
+        if index == 0 or index == -1:
+            self.ui.feeEdit.clear()
+        else:
+            self.ui.feeEdit.setText(str(self.DoctorInfo[index-1][2]))
+
+    def registerDisplay(self):
+        self.ui.deptComboBox.clear()
+        self.ui.deptComboBox.addItem("请选择科室")
+        self.ui.doctorComboBox.clear()
+        self.ui.doctorComboBox.addItem("请选择医生")
+        self.ui.doctorComboBox.setEnabled(False)
+        self.ui.cashierComboBox.clear()
+        self.ui.cashierComboBox.addItem("请选择收银员")
+        sql = "SELECT DeptNo, DeptName from `cs2329.dept` "
+        self.DeptInfo = jdbc.dbQueryAll(sql)
+        for dept in self.DeptInfo:
+            self.ui.deptComboBox.addItem(dept[1])
+        sql = "SELECT Cno, Cname from `cs2329.cashier` "
+        self.CashierInfo = jdbc.dbQueryAll(sql)
+        for cashier in self.CashierInfo:
+            self.ui.cashierComboBox.addItem(cashier[1])
+
+    def register(self):
+        deptIndex = self.ui.deptComboBox.currentIndex()
+        doctorIndex = self.ui.doctorComboBox.currentIndex()
+        cashierIndex = self.ui.cashierComboBox.currentIndex()
+        if deptIndex == 0 or doctorIndex == 0 or cashierIndex == 0:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入完整信息'
+            )
+            return
+        rftime = datetime.datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
+        rfvisittime = self.ui.dateTimeEdit.text()
+        rfee = self.ui.feeEdit.text()
+        sql = "Insert into `cs2329.register_form` " \
+              "(RFdept, RFdoctor, RFpatient, RFcashier, RFtime, RFvisittime, RFfee) " \
+              "values (%s, %s, %s, %s, '%s', '%s', %s)" % (self.DeptInfo[deptIndex-1][0], self.DoctorInfo[doctorIndex-1][0], self.Pno, self.CashierInfo[cashierIndex-1][0], rftime, rfvisittime, rfee)
+        if jdbc.dbInsert(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '挂号成功'
+            )
+        else:
+            QMessageBox.warning(
+                self.ui,
+                '成功',
+                '挂号失败'
+            )
+
+    def recordDisplay(self):
+        return
+    def payDisplay(self):
+        return
 
 
 class Win_updatePatient:
