@@ -30,9 +30,10 @@ class MySignals(QObject):
     insertDept = Signal(int)
     #
     updateUser = Signal(int, str)
-    insert = Signal(int)
+    insertUser = Signal(int)
     #
-    diagnosis = Signal()
+    diagnosis = Signal(int)
+    pay = Signal()
 
 
 class Win_Login:
@@ -212,10 +213,10 @@ class Win_Root(QWidget):
         self.ui.DeptComboBox.currentIndexChanged.connect(self.DeptDisplay)
         self.ui.DeptTable.cellClicked.connect(self.setDeptBtn)
         # 用户表格控件
-        # self.ui.btn_userQuery.clicked.connect(self.queryUser)
-        # self.ui.btn_userUpdate.clicked.connect(self.updateUser)
-        # self.ui.btn_userInsert.clicked.connect(self.insertUser)
-        # self.ui.btn_userDelete.clicked.connect(self.deleteUser)
+        self.ui.btn_userQuery.clicked.connect(self.queryUser)
+        self.ui.btn_userUpdate.clicked.connect(self.updateUser)
+        self.ui.btn_userInsert.clicked.connect(self.insertUser)
+        self.ui.btn_userDelete.clicked.connect(self.deleteUser)
         self.ui.UserComboBox.currentIndexChanged.connect(self.UserDisplay)
         self.ui.UserTable.cellClicked.connect(self.setUserBtn)
         # 信号绑定
@@ -237,8 +238,8 @@ class Win_Root(QWidget):
         # mySignals.updateDept.connect(self.updateDept)
         # mySignals.insertDept.connect(self.DeptDisplay)
 
-        # mySignals.updateUser.connect(self.updateUser)
-        # mySignals.insertUser.connect(self.UserDisplay)
+        mySignals.updateUser.connect(self.updateUserInfo)
+        mySignals.insertUser.connect(self.UserDisplay)
 
     def onSignOut(self):
         self.ui.close()
@@ -317,16 +318,16 @@ class Win_Root(QWidget):
             sql = "SELECT Sno, Slevel, Snumber " \
                   "from `cs2329.salary` "
         elif tableName == 'cs2329.rootUser':
-            tableHeaders = ['用户名', '密码']
+            tableHeaders = ['编号', '用户名', '密码']
             sql = "SELECT * from `cs2329.rootUser` "
         elif tableName == 'cs2329.patientUser':
-            tableHeaders = ['用户名', '密码', '患者编号', '患者姓名']
-            sql = "SELECT USERNAME, PASSWORD, U.Pno, Pname " \
+            tableHeaders = ['患者编号', '患者姓名', '用户名', '密码']
+            sql = "SELECT U.Pno, Pname, USERNAME, PASSWORD " \
                   "from `cs2329.patientUser` U, `cs2329.patient` P " \
                   "where U.Pno = P.Pno"
         elif tableName == 'cs2329.doctorUser':
-            tableHeaders = ['用户名', '密码', '医生编号', '医生姓名']
-            sql = "SELECT USERNAME, PASSWORD, U.Dno, Dname " \
+            tableHeaders = ['医生编号', '医生姓名', '用户名', '密码']
+            sql = "SELECT U.Dno, Dname, USERNAME, PASSWORD " \
                   "from `cs2329.doctorUser` U, `cs2329.doctor` D " \
                   "where U.Dno = D.Dno"
         results = jdbc.dbQueryAll(sql)
@@ -769,6 +770,94 @@ class Win_Root(QWidget):
                 '删除失败'
             )
 
+    def queryUser(self):
+        userInfo = self.ui.userInfo.text()
+        currentIndex = self.ui.UserComboBox.currentIndex()
+        columnCounter = 4
+        if userInfo:
+            if currentIndex == 0:
+                sql = "SELECT No, USERNAME, PASSWORD from `cs2329.rootuser` where USERNAME LIKE '%%%s%%' " % userInfo
+                columnCounter = 3
+            elif currentIndex == 1:
+                sql = "SELECT Du.Dno, Dname, USERNAME, PASSWORD " \
+                      "from `cs2329.doctoruser` Du, `cs2329.doctor` Do " \
+                      "where Du.Dno = Do.Dno and USERNAME LIKE '%%%s%%' " % userInfo
+            elif currentIndex == 2:
+                sql = "SELECT Pu.Pno, Pname, USERNAME, PASSWORD " \
+                      "from `cs2329.patientuser` Pu, `cs2329.patient` P " \
+                      "where Pu.Pno = P.Pno and USERNAME LIKE '%%%s%%' " % userInfo
+
+        else:
+            if currentIndex == 0:
+                sql = "SELECT No, USERNAME, PASSWORD from `cs2329.rootuser` where USERNAME LIKE '%%%s%%' " % userInfo
+                columnCounter = 3
+            elif currentIndex == 1:
+                sql = "SELECT Du.Dno, Dname, USERNAME, PASSWORD " \
+                      "from `cs2329.doctoruser` Du, `cs2329.doctor` Do " \
+                      "where Du.Dno = Do.Dno and USERNAME LIKE '%%%s%%' " % userInfo
+            elif currentIndex == 2:
+                sql = "SELECT Pu.Pno, Pname, USERNAME, PASSWORD " \
+                      "from `cs2329.patientuser` Pu, `cs2329.patient` P " \
+                      "where Pu.Pno = P.Pno and USERNAME LIKE '%%%s%%' " % userInfo
+
+        results = jdbc.dbQueryAll(sql)
+        self.ui.UserTable.setRowCount(0)
+        self.ui.UserTable.clearContents()
+        self.ui.UserTable.setColumnCount(columnCounter)
+        if results:
+            for i in range(len(results)):
+                self.ui.UserTable.insertRow(i)
+                for j in range(columnCounter):
+                    self.ui.UserTable.setItem(i, j, QTableWidgetItem(str(results[i][j])))
+
+    def updateUser(self):
+        currentIndex = self.ui.UserComboBox.currentIndex()
+        currentRow = self.ui.UserTable.currentRow()
+        no = self.ui.UserTable.item(currentRow, 0).text()
+        ShareInfo.updateUserWin = Win_updateUser(currentIndex, no)
+        ShareInfo.updateUserWin.ui.show()
+
+    def updateUserInfo(self, index, key):
+        currentRow = self.ui.UserTable.currentRow()
+        if index == 0:
+            sql = "SELECT No, USERNAME, PASSWORD from `cs2329.rootuser` where No=%s" % key
+        elif index == 1:
+            sql = "SELECT Du.Dno, Dname, USERNAME, PASSWORD " \
+                  "from `cs2329.doctoruser` Du, `cs2329.doctor` Do " \
+                  "where Du.Dno=%s and Do.Dno=%s " % (key, key)
+        elif index == 2:
+            sql = "SELECT Pu.Pno, Pname, USERNAME, PASSWORD " \
+                  "from `cs2329.patientuser` Pu, `cs2329.patient` P " \
+                  "where Pu.Pno=%s and P.Pno=%s" % (key, key)
+        results = jdbc.dbQueryOne(sql)
+        for i in range(len(results)):
+            self.ui.UserTable.setItem(currentRow, i, QTableWidgetItem(str(results[i])))
+
+    def insertUser(self):
+        currentIndex = self.ui.UserComboBox.currentIndex()
+        ShareInfo.insertUserWin = Win_insertUser(currentIndex)
+        ShareInfo.insertUserWin.ui.show()
+
+    def deleteUser(self):
+        currentRow = self.ui.UserTable.currentRow()
+        currentIndex = self.ui.UserComboBox.currentIndex()
+        tables = [['cs2329.rootuser', 'No'], ['cs2329.doctoruser', 'Dno'], ['cs2329.patientuser', 'Pno']]
+        sql = "DELETE from `%s` where %s = %s" % (
+        tables[currentIndex][0], tables[currentIndex][1], int(self.ui.UserTable.item(currentRow, 0).text()))
+        if jdbc.dbDelete(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '删除成功'
+            )
+            self.UserDisplay(currentIndex)
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '删除失败'
+            )
+
 
 class Win_Doctor(QWidget):
     def __init__(self, dno):
@@ -781,6 +870,7 @@ class Win_Doctor(QWidget):
 
         self.ui.actionQuit.triggered.connect(self.onSignOut)
         self.ui.listWidget.currentRowChanged.connect(self.display)
+        mySignals.diagnosis.connect(self.display)
 
     def onSignOut(self):
         self.ui.close()
@@ -883,22 +973,23 @@ class Win_Diagnosis(QWidget):
             self.ui.MpriceEdit.setText(str(self.mnames[index-1][2]))
 
     def diagnosis(self):
+
         symptom = self.ui.SymptomEdit.text()
         diagnosis = self.ui.DiagnosisEdit.text()
         mnumber = self.ui.MnumberEdit.text()
         rfee = self.ui.RfeeEdit.text()
         mtypeIndex = self.ui.MtypeComboBox.currentIndex()
         mnameIndex = self.ui.MnameComboBox.currentIndex()
-        mno = self.mnames[mnameIndex-1][0]
-        mprice = self.mnames[mnameIndex-1][2]
-        munit = self.mnames[mnameIndex-1][3]
-        if symptom == '' or diagnosis == '' or rfee == '' or mtypeIndex == 0 or mnameIndex == 0:
+        if symptom == '' or diagnosis == '' or rfee == '' or mtypeIndex == 0 or mnameIndex == 0 or not self.mnames:
             QMessageBox.warning(
                 self.ui,
                 '提示',
                 '请输入完整信息'
             )
         else:
+            mno = self.mnames[mnameIndex - 1][0]
+            mprice = self.mnames[mnameIndex - 1][2]
+            munit = self.mnames[mnameIndex - 1][3]
             dgtime = datetime.datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
             sql1 = "UPDATE `cs2329.diagnosis` set Symptom='%s', Diagnosis='%s', DGtime='%s', Rfee=%s " \
                   "where DGno=%s" % (symptom, diagnosis, dgtime, rfee, self.DGno)
@@ -912,12 +1003,14 @@ class Win_Diagnosis(QWidget):
             sql5 = "INSERT into `cs2329.fee` (DGno, Rno, Pno, FRecipefee, Fdiscount, Fsum) " \
                    "values (%s, %s, %s, %s, %s, %s)" % (self.DGno, rmno, self.Pno, rfecipefee, 0, rfecipefee)
             if jdbc.dbUpdate(sql1) and jdbc.dbInsert(sql3) and jdbc.dbInsert(sql4) and jdbc.dbInsert(sql5):
-                self.ui.close()
                 QMessageBox.information(
                     self.ui,
                     '完成',
                     '诊断完成'
                 )
+                # 刷新就诊界面
+                mySignals.diagnosis.emit(1)
+                self.ui.close()
             else:
                 QMessageBox.critical(
                     self.ui,
@@ -936,6 +1029,8 @@ class Win_Patient(QWidget):
         self.DoctorInfo = None
         self.CashierInfo = None
         self.resetUserFormAndBtn()
+        # 交完费后更新缴费界面
+        mySignals.pay.connect(self.payDisplay)
 
         sql = "SELECT Pname from `cs2329.patient` where Pno=%s" % self.Pno
         [pname] = jdbc.dbQueryOne(sql)
@@ -1188,13 +1283,15 @@ class Win_pay:
             )
         else:
             dgtime = datetime.datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
-            sql = "UPDATE `cs2329.fee` set FDate='%s', Cno=%s " % (dgtime, self.cnames[index-1][0])
+            sql = "UPDATE `cs2329.fee` set FDate='%s', Cno=%s where Fno=%s" % (dgtime, self.cnames[index-1][0], self.Fno)
             if jdbc.dbUpdate(sql):
                 QMessageBox.information(
                     self.ui,
                     '成功',
                     '缴费成功'
                 )
+                mySignals.pay.emit()
+                self.ui.close()
             else:
                 QMessageBox.critical(
                     self.ui,
@@ -1227,6 +1324,14 @@ class Win_updatePatient:
         pino = self.ui.pinoEdit.text()
         pmno = self.ui.pmnoEdit.text()
         padd = self.ui.paddEdit.text()
+        if not pno or not pname or not pino or not pmno or not padd:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '更新内容不能为空'
+            )
+            return
+
         sql = "update `cs2329.patient` set Pname='%s', Pino='%s', Pmno='%s', Padd='%s' where Pno = %s" % (
         pname, pino, pmno, padd, pno)
         # 需要对patientTable数据进行更新
@@ -1252,6 +1357,7 @@ class Win_updatePatient:
 class Win_insertPatient:
     def __init__(self):
         self.ui = QUiLoader().load('insertPatient.ui')
+        self.ui.rbtn_male.setChecked(True)
         self.ui.btn_insert.clicked.connect(self.insertInfo)
         self.ui.btn_quit.clicked.connect(self.quitInfo)
 
@@ -1268,6 +1374,13 @@ class Win_insertPatient:
         pbd = self.ui.pbdEdit.text()
         padd = self.ui.paddEdit.text()
         mTel = self.ui.mTelEdit.text()
+        if not pno or not pname or not pid or not pino or not pmno or not pbd or not padd or not mTel:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入完整信息'
+            )
+            return
 
         sql1 = "insert into `cs2329.patient` (Pno, Pname, Pid, Pino, Pmno, Psex, Pbd, Padd) values (%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s')" % (
         pno, pname, pid, pino, pmno, psex, pbd, padd)
@@ -1314,6 +1427,14 @@ class Win_updatePatientTel:
         ptno = self.ui.ptnoEdit.text()
         pteltype = self.ui.pteltypeEdit.text()
         ptelcode = self.ui.ptelcodeEdit.text()
+        if not ptno or not ptelcode or not pteltype:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '更新内容不能为空'
+            )
+            return
+
         sql = "update `cs2329.patient_tel` set Pteltype='%s', Ptelcode='%s' where Ptno = %s" % (
         pteltype, ptelcode, ptno)
         # 需要对patientTable数据进行更新
@@ -1347,6 +1468,13 @@ class Win_insertPatientTel:
         pno = self.ui.pnoEdit.text()
         pteltype = self.ui.pteltypeEdit.text()
         ptelcode = self.ui.ptelcodeEdit.text()
+        if not ptno or not pno or not pteltype or not ptelcode:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入完整信息'
+            )
+            return
 
         sql = "insert into `cs2329.patient_tel` (Ptno, Pno, Pteltype, Ptelcode) values (%s, %s, '%s', '%s')" % (
         ptno, pno, pteltype, ptelcode)
@@ -1415,6 +1543,14 @@ class Win_updateDoctor:
         else:
             disex = '否'
         dfee = self.ui.DfeeEdit.text()
+        if not dno or not dname or not dage or not ddeptno or not tno or not dregno or not dfee:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '更新内容不能为空'
+            )
+            return
+
         sql = "update `cs2329.doctor` set Dname='%s', Dsex='%s', Dage=%s, Ddeptno=%s, Tno=%s, Dregno='%s', Disex='%s', Dfee=%s where Dno = %s" % (
         dname, dsex, dage, ddeptno, tno, dregno, disex, dfee, dno)
         # 需要对HRTable数据进行更新
@@ -1440,6 +1576,7 @@ class Win_updateDoctor:
 class Win_insertDoctor:
     def __init__(self):
         self.ui = QUiLoader().load('insertDoctor.ui')
+        self.ui.rbtn_male.setChecked(True)
         self.ui.btn_insert.clicked.connect(self.insertInfo)
         self.ui.btn_quit.clicked.connect(self.quitInfo)
 
@@ -1459,6 +1596,13 @@ class Win_insertDoctor:
         else:
             disex = '否'
         dfee = self.ui.DfeeEdit.text()
+        if not dno or not dname or not dage or not ddeptno or not tno or not dregno or not dfee:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入完整信息'
+            )
+            return
 
         sql = "insert into `cs2329.doctor` (Dno, Dname, Dsex, Dage, Ddeptno, Tno, Dregno, Disex, Dfee) values (%s, '%s', '%s', %s, %s, %s, '%s', '%s', %s)" % (
             dno, dname, dsex, dage, ddeptno, tno, dregno, disex, dfee)
@@ -1519,6 +1663,14 @@ class Win_updateNurse:
         tno = self.ui.TnoEdit.text()
         nceno = self.ui.NcenoEdit.text()
         nlevel = self.ui.NlevelEdit.text()
+        if not nno or not nname or not nage or not ndeptno or not tno or not nceno or not nlevel:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '更新内容不能为空'
+            )
+            return
+
         sql = "update `cs2329.nurse` set Nname='%s', Nsex='%s', Nage=%s, Ndeptno=%s, Tno=%s, Nceno='%s', Nlevel='%s' where Nno = %s" % (
         nname, nsex, nage, ndeptno, tno, nceno, nlevel, nno)
         # 需要对patientTable数据进行更新
@@ -1544,6 +1696,7 @@ class Win_updateNurse:
 class Win_insertNurse:
     def __init__(self):
         self.ui = QUiLoader().load('insertNurse.ui')
+        self.ui.rbtn_male.setChecked(True)
         self.ui.btn_insert.clicked.connect(self.insertInfo)
         self.ui.btn_quit.clicked.connect(self.quitInfo)
 
@@ -1559,6 +1712,13 @@ class Win_insertNurse:
         tno = self.ui.TnoEdit.text()
         nceno = self.ui.NcenoEdit.text()
         nlevel = self.ui.NlevelEdit.text()
+        if not nno or not nname or not nage or not ndeptno or not tno or not nceno or not nlevel:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入完整信息'
+            )
+            return
 
         sql = "insert into `cs2329.nurse` (Nno, Nname, Nsex, Nage, Ndeptno, Tno, Nceno, Nlevel) values (%s, '%s', '%s', %s, %s, %s, '%s', '%s')" % (
             nno, nname, nsex, nage, ndeptno, tno, nceno, nlevel)
@@ -1619,6 +1779,14 @@ class Win_updatePharmacist:
         tno = self.ui.TnoEdit.text()
         phceno = self.ui.PhcenoEdit.text()
         phtype = self.ui.PhtypeEdit.text()
+        if not phno or not phname or not phage or not phdeptno or not tno or not phceno or not phtype:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '更新内容不能为空'
+            )
+            return
+
         sql = "update `cs2329.pharmacist` set Phname='%s', Phsex='%s', Phage=%s, Phdeptno=%s, Tno=%s, Phceno='%s', Phtype='%s' where Phno = %s" % (
         phname, phsex, phage, phdeptno, tno, phceno, phtype, phno)
 
@@ -1644,6 +1812,7 @@ class Win_updatePharmacist:
 class Win_insertPharmacist:
     def __init__(self):
         self.ui = QUiLoader().load('insertPharmacist.ui')
+        self.ui.rbtn_male.setChecked(True)
         self.ui.btn_insert.clicked.connect(self.insertInfo)
         self.ui.btn_quit.clicked.connect(self.quitInfo)
 
@@ -1659,6 +1828,13 @@ class Win_insertPharmacist:
         tno = self.ui.TnoEdit.text()
         phceno = self.ui.PhcenoEdit.text()
         phtype = self.ui.PhtypeEdit.text()
+        if not phno or not phname or not phage or not phdeptno or not tno or not phceno or not phtype:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入完整信息'
+            )
+            return
 
         sql = "insert into `cs2329.pharmacist` (Phno, Phname, Phsex, Phage, Phdeptno, Tno, Phceno, Phtype) values (%s, '%s', '%s', %s, %s, %s, '%s', '%s')" % (
             phno, phname, phsex, phage, phdeptno, tno, phceno, phtype)
@@ -1716,6 +1892,14 @@ class Win_updateCashier:
         cdeptno = self.ui.CdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
         cceno = self.ui.CcenoEdit.text()
+        if not cno or not cname or not cage or not cdeptno or not tno or not cceno:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '更新内容不能为空'
+            )
+            return
+
         sql = "update `cs2329.cashier` set Cname='%s', Csex='%s', Cage=%s, Cdeptno=%s, Tno=%s, Cceno='%s' where Cno = %s" % (
         cname, csex, cage, cdeptno, tno, cceno, cno)
         # 需要对patientTable数据进行更新
@@ -1741,6 +1925,7 @@ class Win_updateCashier:
 class Win_insertCashier:
     def __init__(self):
         self.ui = QUiLoader().load('insertCashier.ui')
+        self.ui.rbtn_male.setChecked(True)
         self.ui.btn_insert.clicked.connect(self.insertInfo)
         self.ui.btn_quit.clicked.connect(self.quitInfo)
 
@@ -1755,6 +1940,13 @@ class Win_insertCashier:
         cdeptno = self.ui.CdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
         cceno = self.ui.CcenoEdit.text()
+        if not cno or not cname or not cage or not cdeptno or not tno or not cceno:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入完整信息'
+            )
+            return
 
         sql = "insert into `cs2329.cashier` (Cno, Cname, Csex, Cage, Cdeptno, Tno, Cceno) values (%s, '%s', '%s', %s, %s, %s, '%s')" % (
             cno, cname, csex, cage, cdeptno, tno, cceno)
@@ -1766,6 +1958,111 @@ class Win_insertCashier:
                 '插入成功'
             )
             mySignals.insertHR.emit(3)
+            self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '插入失败'
+            )
+
+    def quitInfo(self):
+        self.ui.close()
+
+
+class Win_updateUser:
+    def __init__(self, index, no):
+        self.ui = QUiLoader().load('updateUser.ui')
+        self.Index = index
+        self.No = no
+        if index == 0:
+            sql = "SELECT No, USERNAME, PASSWORD from `cs2329.rootuser` where No=%s" % self.No
+        elif index == 1:
+            sql = "SELECT Dno, USERNAME, PASSWORD from `cs2329.doctoruser` where Dno=%s" % self.No
+        elif index == 2:
+            sql = "SELECT Pno, USERNAME, PASSWORD from `cs2329.patientuser` where Pno=%s" % self.No
+        [no, username, password] = jdbc.dbQueryOne(sql)
+        self.ui.noEdit.setText(str(no))
+        self.ui.usernameEdit.setText(str(username))
+        self.ui.passwordEdit.setText(str(password))
+        # nno为主键，设置为只读
+        self.ui.noEdit.setReadOnly(True)
+
+        self.ui.btn_update.clicked.connect(self.updateInfo)
+        self.ui.btn_quit.clicked.connect(self.quitInfo)
+
+    def updateInfo(self):
+        no = self.ui.noEdit.text()
+        username = self.ui.usernameEdit.text()
+        password = self.ui.passwordEdit.text()
+        if not no or not username or not password:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '更新内容不能为空'
+            )
+            return
+
+        sql = None
+        if self.Index == 0:
+            sql = "UPDATE `cs2329.rootuser` set USERNAME='%s', PASSWORD='%s' where No=%s" % (username, password, no)
+        elif self.Index == 1:
+            sql = "UPDATE `cs2329.doctoruser` set USERNAME='%s', PASSWORD='%s' where Dno=%s" % (username, password, no)
+        elif self.Index == 2:
+            sql = "UPDATE `cs2329.patientuser` set USERNAME='%s', PASSWORD='%s' where Pno=%s" % (username, password, no)
+        # 需要对patientTable数据进行更新
+        if jdbc.dbUpdate(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '更新成功'
+            )
+            mySignals.updateUser.emit(self.Index, self.No)
+            self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '更新失败'
+            )
+
+    def quitInfo(self):
+        self.ui.close()
+
+
+class Win_insertUser:
+    def __init__(self, index):
+        self.ui = QUiLoader().load('insertUser.ui')
+        self.Index = index
+        self.ui.btn_insert.clicked.connect(self.insertInfo)
+        self.ui.btn_quit.clicked.connect(self.quitInfo)
+
+    def insertInfo(self):
+        no = self.ui.noEdit.text()
+        username = self.ui.usernameEdit.text()
+        password = self.ui.passwordEdit.text()
+        if not no or not username or not password:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入完整信息'
+            )
+            return
+
+        if self.Index == 0:
+            sql = "insert into `cs2329.rootuser` (No, USERNAME, PASSWORD) values (%s, '%s', '%s')" % (no, username, password)
+        elif self.Index == 1:
+            sql = "insert into `cs2329.doctoruser` (Dno, USERNAME, PASSWORD) values (%s, '%s', '%s')" % (no, username, password)
+        elif self.Index == 2:
+            sql = "insert into `cs2329.patientuser` (Pno, USERNAME, PASSWORD) values (%s, '%s', '%s')" % (no, username, password)
+
+        if jdbc.dbInsert(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '插入成功'
+            )
+            mySignals.insertUser.emit(self.Index)
             self.ui.close()
         else:
             QMessageBox.critical(

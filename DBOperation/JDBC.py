@@ -232,6 +232,22 @@ class JDBC:
           FOREIGN KEY (Pno) REFERENCES `cs2329.patient` (Pno),
           FOREIGN KEY (Rno) REFERENCES `cs2329.recipe_master` (RMno)
         );
+        
+        create table `cs2329.patientUser` (
+        Pno int unsigned DEFAULT NULL, 
+        USERNAME CHAR(20) not null, 
+        PASSWORD CHAR(20) not null, 
+        primary key (USERNAME), 
+        FOREIGN KEY (Pno) REFERENCES `cs2329.patient` (Pno) 
+        );
+        
+        create table `cs2329.doctorUser` (
+        Dno int unsigned DEFAULT NULL, 
+        USERNAME CHAR(20) not null,
+        PASSWORD CHAR(20) not null, 
+        primary key (USERNAME), 
+        FOREIGN KEY (Dno) REFERENCES `cs2329.doctor` (Dno)
+        );
         """
             self.cursor.execute(sql)
             return True
@@ -407,16 +423,16 @@ class JDBC:
         # 导入药品信息
         sqls = [
             "insert into `cs2329.medicine` values(314172, 34, '卡托利普片', 0.037, '片', '西药')",
-            "insert into `cs2329.medicine` values(314418, 02, '卡托利普片', 11.5, '瓶', '西药')",
-            "insert into `cs2329.medicine` values(314941, 12, '卡托利普片', 27.1, '盒', '西药')",
-            "insert into `cs2329.medicine` values(315189, 12, '卡托利普片', 26.9, '盒', '西药')",
-            "insert into `cs2329.medicine` values(315501, 55, '卡托利普片', 21, '盒', '西药')",
-            "insert into `cs2329.medicine` values(315722, 34, '卡托利普片', 26.9, '盒', '西药')",
-            "insert into `cs2329.medicine` values(315805, 34, '卡托利普片', 0.1267, '粒', '西药')",
-            "insert into `cs2329.medicine` values(315977, 02, '卡托利普片', 26.5, '盒', '西药')",
-            "insert into `cs2329.medicine` values(316792, 12, '卡托利普片', 2.3, '粒', '西药')",
-            "insert into `cs2329.medicine` values(316910, 55, '卡托利普片', 46, '支', '西药')",
-            "insert into `cs2329.medicine` values(317660, 34, '卡托利普片', 25.5, '盒', '中成药')"
+            "insert into `cs2329.medicine` values(314418, 02, '替硝唑葡萄糖针', 11.5, '瓶', '西药')",
+            "insert into `cs2329.medicine` values(314941, 12, '肾石通胶囊', 27.1, '盒', '西药')",
+            "insert into `cs2329.medicine` values(315189, 12, '心胃止痛胶囊', 26.9, '盒', '西药')",
+            "insert into `cs2329.medicine` values(315501, 55, '阿奇霉素胶囊', 21, '盒', '西药')",
+            "insert into `cs2329.medicine` values(315722, 34, 'L-谷氨酰胺胶囊', 26.9, '盒', '西药')",
+            "insert into `cs2329.medicine` values(315805, 34, '盐酸雷尼替丁胶囊', 0.1267, '粒', '西药')",
+            "insert into `cs2329.medicine` values(315977, 02, '胃立康片', 26.5, '盒', '西药')",
+            "insert into `cs2329.medicine` values(316792, 12, '复方雷尼替丁胶囊', 2.3, '粒', '西药')",
+            "insert into `cs2329.medicine` values(316910, 55, '依诺沙星注射液', 46, '支', '西药')",
+            "insert into `cs2329.medicine` values(317660, 34, '蒲公英胶囊', 25.5, '盒', '中成药')"
             ]
         for sql in sqls:
             if not self.dbInsert(sql):
@@ -492,6 +508,21 @@ class JDBC:
             "insert into `cs2329.fee` values(1283308, '02995687', '2016-7-23 11:11:34', 3308, 1284041, 05, 201, 17, 3.4, 13.6)",
             "insert into `cs2329.fee` values(1283523, '02997432', '2016-7-23 02:01:05', 3523, 1284256, 08, 481, 13, 0, 13)",
             "insert into `cs2329.fee` values(1457816, '02990101', '2017-1-8 05:17:03', 3265, 1458878, 09, 201, 111, 0, 111)",
+        ]
+        for sql in sqls:
+            if not self.dbInsert(sql):
+                return False
+
+        sqls = [
+            "insert into `cs2329.patientUser` values(161, 'LiuJing', '123')",
+            "insert into `cs2329.patientUser` values(421, 'FuWeixiang', '123')"
+        ]
+        for sql in sqls:
+            if not self.dbInsert(sql):
+                return False
+        sqls = [
+            "insert into `cs2329.doctorUser` values(82, 'YangXun', '123')",
+            "insert into `cs2329.doctorUser` values(368, 'LuoXiao', '123')"
         ]
         for sql in sqls:
             if not self.dbInsert(sql):
