@@ -57,7 +57,7 @@
       </item>
       <item>
        <property name="text">
-        <string>就诊</string>
+        <string>待诊断</string>
        </property>
       </item>
      </widget>
@@ -68,7 +68,7 @@
        <cursorShape>ArrowCursor</cursorShape>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page">
        <layout class="QHBoxLayout" name="horizontalLayout_2">

@@ -516,7 +516,7 @@ class JDBC:
             self.conn.commit()
             return True
         except:
-            print("插入失败")
+            # print("插入失败")
             self.conn.rollback()
             return False
 
@@ -527,7 +527,7 @@ class JDBC:
             headers = [desc[0] for desc in description]
             return headers
         except:
-            print("查询失败")
+            # print("查询失败")
             return None
 
     def dbQueryAll(self, sql):

@@ -17,4 +17,7 @@ class ShareInfo:
     insertCashierWin = None
     Recipe_Detail_Win = None
     FeeWin = None
+    diagnosisWin = None
+    recipeWin = None
+    payWin = None
 

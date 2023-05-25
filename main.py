@@ -1,4 +1,5 @@
 import datetime
+import string
 
 from PySide2.QtWidgets import QApplication, QMessageBox, QTableWidgetItem, QPushButton, QHBoxLayout, QWidget
 from PySide2.QtUiTools import QUiLoader
@@ -44,19 +45,17 @@ class Win_Login:
         self.ui.btn_rootLogin.clicked.connect(self.onSignIn)
         self.ui.btn_doctorLogin.clicked.connect(self.onSignIn)
         self.ui.btn_patientLogin.clicked.connect(self.onSignIn)
-        # self.ui.btn_patientRegister.clicked.connect(self.onRegister)
+        self.ui.btn_patientRegister.clicked.connect(self.onRegister)
         self.ui.usernameEdit.returnPressed.connect(self.onSignIn)
         self.ui.passwordEdit.returnPressed.connect(self.onSignIn)
 
     def changeIndex(self, index):
         self.ui.stackedWidget.setCurrentIndex(index)
 
+    def onRegister(self):
+        return
+
     def onSignIn(self):
-        # self.ui.hide()
-        # self.ui.edt_password.clear()
-        # ShareInfo.rootWin = Win_Root()
-        # ShareInfo.rootWin.ui.show()
-        # return
         if not self.ui.usernameEdit.text() or not self.ui.passwordEdit.text():
             QMessageBox.warning(
                 self.ui,
@@ -71,7 +70,8 @@ class Win_Login:
         if self.ui.rbtn_patient.isChecked():
             index = 2
         # 注意这里的%s外要加上‘’， 否则会报错
-        sql = "select * from `%s` where USERNAME='%s' and PASSWORD='%s'" % (tables[index], self.ui.usernameEdit.text(), self.ui.passwordEdit.text())
+        sql = "select * from `%s` where USERNAME='%s' and PASSWORD='%s'" % (
+        tables[index], self.ui.usernameEdit.text(), self.ui.passwordEdit.text())
 
         result = jdbc.dbQueryOne(sql)
         # # 测试
@@ -119,7 +119,7 @@ class Win_Root(QWidget):
         self.ui.btn_patientInsert.clicked.connect(self.insertPatient)
         self.ui.btn_patientDelete.clicked.connect(self.deletePatient)
         self.ui.patientComboBox.currentIndexChanged.connect(self.patientDisplay)
-        self.ui.patientTable.cellClicked.connect(self.setPatientBtn) # 表格选中事件绑定
+        self.ui.patientTable.cellClicked.connect(self.setPatientBtn)  # 表格选中事件绑定
         # 员工表格控件
         self.ui.btn_HRQuery.clicked.connect(self.queryHR)
         self.ui.btn_HRUpdate.clicked.connect(self.updateHR)
@@ -240,7 +240,8 @@ class Win_Root(QWidget):
             tableHeaders = ['药品编号', '从单编号', '药品名称', '价格', '包装单位', '药品类型']
             sql = "SELECT * from `cs2329.medicine` "
         elif tableName == 'cs2329.register_form':
-            tableHeaders = ['挂号单编号', '挂号科室', '科室', '挂号医生', '医生姓名', '挂号患者', '患者姓名', '挂号收费员', '收费员姓名', '挂号时间', '预约就诊时间', '挂号费', '备注']
+            tableHeaders = ['挂号单编号', '挂号科室', '科室', '挂号医生', '医生姓名', '挂号患者', '患者姓名', '挂号收费员', '收费员姓名', '挂号时间', '预约就诊时间',
+                            '挂号费', '备注']
             sql = "SELECT RFno, RFdept, DeptName, RFdoctor, Dname, RFpatient, Pname, RFcashier, Cname, RFtime, RFvisittime, RFfee, RFnotes " \
                   "from `cs2329.register_form` Rf, `cs2329.dept` De, `cs2329.doctor` Do, `cs2329.patient` P, `cs2329.cashier` C " \
                   "where Rf.RFdept = De.DeptNo and Rf.RFdoctor = Do.Dno and Rf.RFpatient = P.Pno and Rf.RFcashier = C.Cno"
@@ -307,12 +308,13 @@ class Win_Root(QWidget):
                     widget_btn1.setLayout(vLayout1)  # Widget中添加布局
                     widget_btn2.setLayout(vLayout2)
                     table.setCellWidget(i, columnCounter, widget_btn1)  # 表格中添加Widget
-                    table.setCellWidget(i, columnCounter+1, widget_btn2)
+                    table.setCellWidget(i, columnCounter + 1, widget_btn2)
             else:
                 for i in range(len(results)):
                     table.insertRow(i)
                     for j in range(columnCounter):
                         table.setItem(i, j, QTableWidgetItem(str(results[i][j])))
+
     # 展示处方药品详情
     def showRecipe_Detail_Info(self):
         button = self.sender()
@@ -323,7 +325,7 @@ class Win_Root(QWidget):
             ShareInfo.Recipe_Detail_Win = Win_Recipe_Detail(rmno)
             ShareInfo.Recipe_Detail_Win.ui.show()
 
-    # 展示处方药品详情
+    # 展示费用详情
     def showFee_Info(self):
         button = self.sender()
         if button:
@@ -331,7 +333,15 @@ class Win_Root(QWidget):
             row = self.ui.TreatTable.indexAt(button.parent().pos()).row()
             rmno = self.ui.TreatTable.item(row, 0).text()
             ShareInfo.FeeWin = Win_Fee(rmno)
-            ShareInfo.FeeWin.ui.show()
+            # 判断患者是否缴费
+            if ShareInfo.FeeWin.result:
+                ShareInfo.FeeWin.ui.show()
+            else:
+                QMessageBox.critical(
+                    self.ui,
+                    '未缴费',
+                    '患者未缴费'
+                )
 
     def patientDisplay(self, index):
         self.resetBtn(0)
@@ -550,7 +560,8 @@ class Win_Root(QWidget):
         currentRow = self.ui.patientTable.currentRow()
         currentIndex = self.ui.patientComboBox.currentIndex()
         tables = [['cs2329.patient', 'Pno'], ['cs2329.patient_tel', 'Ptno']]
-        sql = "DELETE from `%s` where %s = %s" % (tables[currentIndex][0], tables[currentIndex][1], int(self.ui.patientTable.item(currentRow, 0).text()))
+        sql = "DELETE from `%s` where %s = %s" % (
+        tables[currentIndex][0], tables[currentIndex][1], int(self.ui.patientTable.item(currentRow, 0).text()))
 
         jdbc.dbDelete(sql)
         self.patientDisplay(currentIndex)
@@ -577,7 +588,7 @@ class Win_Root(QWidget):
             elif currentIndex == 3:
                 sql = "SELECT Cno, Cname, Csex, Cage, Cdeptno, DeptName, Ca.Tno, Ttype, Cceno " \
                       "from `cs2329.cashier` Ca, `cs2329.dept` De, `cs2329.title` T " \
-                      "where Ca.Cdeptno = De.DeptNo and Ca.Tno = T.Tno and Cname LIKE '%%%s%%'" %HRInfo
+                      "where Ca.Cdeptno = De.DeptNo and Ca.Tno = T.Tno and Cname LIKE '%%%s%%'" % HRInfo
                 columnCounter = 9
         else:
             if currentIndex == 0:
@@ -667,11 +678,14 @@ class Win_Root(QWidget):
         elif currentIndex == 3:
             ShareInfo.insertCashierWin = Win_insertCashier()
             ShareInfo.insertCashierWin.ui.show()
+
     def deleteHR(self):
         currentRow = self.ui.HRTable.currentRow()
         currentIndex = self.ui.HRComboBox.currentIndex()
-        tables = [['cs2329.doctor', 'Dno'], ['cs2329.nurse', 'Nno'], ['cs2329.pharmacist', 'Phno'], ['cs2329.cashier', 'Cno']]
-        sql = "DELETE from `%s` where %s = %s" % (tables[currentIndex][0], tables[currentIndex][1], int(self.ui.HRTable.item(currentRow, 0).text()))
+        tables = [['cs2329.doctor', 'Dno'], ['cs2329.nurse', 'Nno'], ['cs2329.pharmacist', 'Phno'],
+                  ['cs2329.cashier', 'Cno']]
+        sql = "DELETE from `%s` where %s = %s" % (
+        tables[currentIndex][0], tables[currentIndex][1], int(self.ui.HRTable.item(currentRow, 0).text()))
 
         jdbc.dbDelete(sql)
         self.HRDisplay(currentIndex)
@@ -682,9 +696,9 @@ class Win_Doctor(QWidget):
         super(Win_Doctor, self).__init__()
         self.ui = QUiLoader().load('doctor.ui')
         self.Dno = dno
-        sql = "SELECT Dname from `cs2329.doctor` where Dno=%s" % self.Dno
-        [Dname] = jdbc.dbQueryOne(sql)
-        self.ui.Info.appendPlainText("欢迎您，"+Dname)
+        sql = "SELECT Dname, Ddeptno from `cs2329.doctor` where Dno=%s" % self.Dno
+        [Dname, self.DeptNo] = jdbc.dbQueryOne(sql)
+        self.ui.Info.appendPlainText("欢迎您，" + Dname)
 
         self.ui.actionQuit.triggered.connect(self.onSignOut)
         self.ui.listWidget.currentRowChanged.connect(self.display)
@@ -697,14 +711,147 @@ class Win_Doctor(QWidget):
         self.ui.stackedWidget.setCurrentIndex(index)
         if index >= 1:
             if index == 1:
-                return
+                self.diagnosisDisplay()
+
+    def diagnosisDisplay(self):
+        sql = "SELECT DGno, D.Pno, Pname " \
+              "from `cs2329.diagnosis` D, `cs2329.patient` P " \
+              "where D.Dno=%s and P.Pno=D.Pno and D.Diagnosis=''" % self.Dno
+        results = jdbc.dbQueryAll(sql)
+        table = self.ui.diagnosisTable
+        table.setRowCount(0)
+        table.clearContents()
+        if results:
+            tableHeaders = ['诊断编号', '患者编号', '患者姓名', '开具诊断和处方']
+            columnCounter = len(tableHeaders)
+            table.setColumnCount(columnCounter)
+            table.setHorizontalHeaderLabels(tableHeaders)
+            columnCounter = columnCounter - 1  # 后两列用于添加按钮
+            for i in range(len(results)):
+                table.insertRow(i)
+                for j in range(columnCounter):
+                    table.setItem(i, j, QTableWidgetItem(str(results[i][j])))
+                # 创建按钮
+                btn_diagnosis = QPushButton("开具诊断")
+                # 编辑按钮样式
+                btn_diagnosis.setFixedSize(QSize(120, 40))
+                btn_diagnosis.setStyleSheet(
+                    "QPushButton{color:white;background-color:rgb(51,204,255);font-family:黑体;border-radius: 15px;}"
+                    "QPushButton:pressed{background-color:rgb(51,129,172)}")
+                btn_diagnosis.clicked.connect(lambda: self.diagnosis(results[i][0], self.Dno, results[i][1], self.DeptNo))
+                vLayout1 = QHBoxLayout()
+                widget_btn1 = QWidget()
+                vLayout1.addWidget(btn_diagnosis)  # 布局中添加了控件
+                widget_btn1.setLayout(vLayout1)  # Widget中添加布局
+                table.setCellWidget(i, columnCounter, widget_btn1)  # 表格中添加Widget
+
+    def diagnosis(self, dgno, dno, pno, deptno):
+        ShareInfo.diagnosisWin = Win_Diagnosis(dgno, dno, pno, deptno)
+        ShareInfo.diagnosisWin.ui.show()
+
+    def recipe(self):
+        return
+
+
+class Win_Diagnosis(QWidget):
+    def __init__(self, dgno, dno, pno, deptno):
+        super(Win_Diagnosis, self).__init__()
+        self.ui = QUiLoader().load('diagnosis.ui')
+        self.DGno = dgno
+        self.Dno = dno
+        self.Pno = pno
+        self.DeptNo = deptno
+        self.mtypes = None
+        self.mnames = None
+        self.ui.MnameComboBox.addItem("请选择药品名称")
+        self.ui.MnameComboBox.setEnabled(False)
+        self.ui.MtypeComboBox.addItem("请选择药品类型")
+
+        sql = "SELECT distinct Mtype from `cs2329.medicine` "
+        self.mtypes = jdbc.dbQueryAll(sql)
+        # print(self.mtypes)
+        for mtype in self.mtypes:
+            self.ui.MtypeComboBox.addItem(mtype[0])
+
+        self.ui.btn_accurate.clicked.connect(self.diagnosis)
+        self.ui.MtypeComboBox.currentIndexChanged.connect(self.updateMtypeComboBox)
+        self.ui.MnameComboBox.currentIndexChanged.connect(self.updateMnameComboBox)
+
+    def updateMtypeComboBox(self, index):
+        if index == 0:
+            self.ui.MnameComboBox.clear()
+            self.ui.MnameComboBox.addItem("请选择药品名称")
+            self.ui.MnameComboBox.setEnabled(False)
+            self.ui.MunitEdit.clear()
+            self.ui.MpriceEcit.clear()
+        else:
+            self.ui.MnameComboBox.clear()
+            self.ui.MnameComboBox.addItem("请选择药品名称")
+            self.ui.MnameComboBox.setEnabled(True)
+            sql = "SELECT Mno, Mname, Mprice, Munit from `cs2329.medicine` where Mtype='%s'" % self.mtypes[index-1][0]
+            # print(sql)
+            self.mnames = jdbc.dbQueryAll(sql)
+            # print(self.mnames)
+            for mname in self.mnames:
+                self.ui.MnameComboBox.addItem(mname[1])
+
+    def updateMnameComboBox(self, index):
+        if index == 0 or index == -1:
+            self.ui.MunitEdit.clear()
+            self.ui.MpriceEdit.clear()
+        else:
+            self.ui.MunitEdit.setText(self.mnames[index-1][3])
+            self.ui.MpriceEdit.setText(str(self.mnames[index-1][2]))
+
+    def diagnosis(self):
+        symptom = self.ui.SymptomEdit.text()
+        diagnosis = self.ui.DiagnosisEdit.text()
+        mnumber = self.ui.MnumberEdit.text()
+        rfee = self.ui.RfeeEdit.text()
+        mtypeIndex = self.ui.MtypeComboBox.currentIndex()
+        mnameIndex = self.ui.MnameComboBox.currentIndex()
+        mno = self.mnames[mnameIndex-1][0]
+        mprice = self.mnames[mnameIndex-1][2]
+        munit = self.mnames[mnameIndex-1][3]
+        if symptom == '' or diagnosis == '' or rfee == '' or mtypeIndex == 0 or mnameIndex == 0:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请输入完整信息'
+            )
+        else:
+            dgtime = datetime.datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
+            sql1 = "UPDATE `cs2329.diagnosis` set Symptom='%s', Diagnosis='%s', DGtime='%s', Rfee=%s " \
+                  "where DGno=%s" % (symptom, diagnosis, dgtime, rfee, self.DGno)
+            sql2 = "SELECT max(RMno)+1 from `cs2329.recipe_master`"
+            [rmno] = jdbc.dbQueryOne(sql2)
+            sql3 = "INSERT into `cs2329.recipe_master` (RMno, DeptNo, Dno, Pno, RMtime) " \
+                   "values (%s, %s, %s, %s, '%s')" % (rmno, self.DeptNo, self.Dno, self.Pno, dgtime)
+            sql4 = "INSERT into `cs2329.recipe_detail` (RMno, Mno, RDprice, RDnumber, RDunit) " \
+                   "values (%s, %s, %s, %s, '%s')" % (rmno, mno, mprice, mnumber, munit)
+            rfecipefee = float(mnumber) * float(mprice)
+            sql5 = "INSERT into `cs2329.fee` (DGno, Rno, Pno, FRecipefee, Fdiscount, Fsum) " \
+                   "values (%s, %s, %s, %s, %s, %s)" % (self.DGno, rmno, self.Pno, rfecipefee, 0, rfecipefee)
+            if jdbc.dbUpdate(sql1) and jdbc.dbInsert(sql3) and jdbc.dbInsert(sql4) and jdbc.dbInsert(sql5):
+                self.ui.close()
+                QMessageBox.information(
+                    self.ui,
+                    '完成',
+                    '诊断完成'
+                )
+            else:
+                QMessageBox.critical(
+                    self.ui,
+                    '失败',
+                    '诊断失败'
+                )
 
 
 class Win_Patient(QWidget):
     def __init__(self, pno):
         super(Win_Patient, self).__init__()
         self.ui = QUiLoader().load('patient.ui')
-        self.ui.pnameEdit.setReadOnly(False) # 姓名不可更改
+        self.ui.pnameEdit.setReadOnly(False)  # 姓名不可更改
         self.Pno = pno
         self.DeptInfo = None
         self.DoctorInfo = None
@@ -713,7 +860,7 @@ class Win_Patient(QWidget):
 
         sql = "SELECT Pname from `cs2329.patient` where Pno=%s" % self.Pno
         [pname] = jdbc.dbQueryOne(sql)
-        self.ui.Info.appendPlainText("欢迎您，"+pname)
+        self.ui.Info.appendPlainText("欢迎您，" + pname)
         # 绑定事件
         self.ui.actionQuit.triggered.connect(self.onSignOut)
         self.ui.listWidget.currentRowChanged.connect(self.display)
@@ -799,7 +946,7 @@ class Win_Patient(QWidget):
             self.ui.doctorComboBox.clear()
             self.ui.doctorComboBox.addItem("请选择医生")
             self.ui.doctorComboBox.setEnabled(True)
-            deptNo = self.DeptInfo[index-1][0]
+            deptNo = self.DeptInfo[index - 1][0]
             sql = "SELECT Dno, Dname, Dfee from `cs2329.doctor` D where D.Ddeptno=%s" % deptNo
             self.DoctorInfo = jdbc.dbQueryAll(sql)
             for doctor in self.DoctorInfo:
@@ -809,7 +956,7 @@ class Win_Patient(QWidget):
         if index == 0 or index == -1:
             self.ui.feeEdit.clear()
         else:
-            self.ui.feeEdit.setText(str(self.DoctorInfo[index-1][2]))
+            self.ui.feeEdit.setText(str(self.DoctorInfo[index - 1][2]))
 
     def registerDisplay(self):
         self.ui.deptComboBox.clear()
@@ -842,10 +989,15 @@ class Win_Patient(QWidget):
         rftime = datetime.datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
         rfvisittime = self.ui.dateTimeEdit.text()
         rfee = self.ui.feeEdit.text()
-        sql = "Insert into `cs2329.register_form` " \
-              "(RFdept, RFdoctor, RFpatient, RFcashier, RFtime, RFvisittime, RFfee) " \
-              "values (%s, %s, %s, %s, '%s', '%s', %s)" % (self.DeptInfo[deptIndex-1][0], self.DoctorInfo[doctorIndex-1][0], self.Pno, self.CashierInfo[cashierIndex-1][0], rftime, rfvisittime, rfee)
-        if jdbc.dbInsert(sql):
+        sql1 = "Insert into `cs2329.register_form` " \
+               "(RFdept, RFdoctor, RFpatient, RFcashier, RFtime, RFvisittime, RFfee) " \
+               "values (%s, %s, %s, %s, '%s', '%s', %s)" % (
+               self.DeptInfo[deptIndex - 1][0], self.DoctorInfo[doctorIndex - 1][0], self.Pno,
+               self.CashierInfo[cashierIndex - 1][0], rftime, rfvisittime, rfee)
+        sql2 = "Insert into `cs2329.diagnosis` " \
+               "(Pno, Dno) values (%s, %s)" % (self.Pno, self.DoctorInfo[doctorIndex - 1][0])
+
+        if jdbc.dbInsert(sql1) and jdbc.dbInsert(sql2):
             QMessageBox.information(
                 self.ui,
                 '成功',
@@ -859,9 +1011,106 @@ class Win_Patient(QWidget):
             )
 
     def recordDisplay(self):
-        return
+        tableHeaders = ['就诊医生', '症状描述', '诊断意见', '诊断时间']
+        columnCounter = len(tableHeaders)
+        sql = "SELECT Dname, Symptom, Diagnosis, DGtime " \
+              "from `cs2329.diagnosis` Di, `cs2329.doctor` Do " \
+              "where Di.Dno = Do.Dno and Di.Pno=%s" % self.Pno
+        results = jdbc.dbQueryAll(sql)
+        self.ui.recordTable.setRowCount(0)
+        self.ui.recordTable.clearContents()
+        self.ui.recordTable.setColumnCount(columnCounter)
+        self.ui.recordTable.setHorizontalHeaderLabels(tableHeaders)
+        if results:
+            for i in range(len(results)):
+                self.ui.recordTable.insertRow(i)
+                for j in range(columnCounter):
+                    self.ui.recordTable.setItem(i, j, QTableWidgetItem(str(results[i][j])))
+
     def payDisplay(self):
-        return
+        # Cno为NULL表示诊断后未缴费
+        sql = "SELECT Dname, Pname, FRecipefee, Fdiscount, Fsum, Fno " \
+              "from `cs2329.fee` F, `cs2329.patient` P, `cs2329.doctor` Do, `cs2329.diagnosis` Di " \
+              "where isnull(F.Cno) and F.Pno=%s and P.Pno=%s and F.DGno=Di.DGno and Do.Dno=Di.Dno" % (self.Pno, self.Pno)
+        results = jdbc.dbQueryAll(sql)
+        # print(results)
+        table = self.ui.payTable
+        table.setRowCount(0)
+        table.clearContents()
+        if results:
+            tableHeaders = ['医生姓名', '患者姓名', '应收金额', '减免金额', '实收金额', '缴费']
+            columnCounter = len(tableHeaders)
+            table.setColumnCount(columnCounter)
+            table.setHorizontalHeaderLabels(tableHeaders)
+            columnCounter = columnCounter - 1  # 后两列用于添加按钮
+            for i in range(len(results)):
+                table.insertRow(i)
+                for j in range(columnCounter):
+                    table.setItem(i, j, QTableWidgetItem(str(results[i][j])))
+                # 创建按钮
+                btn_pay = QPushButton("点击缴费")
+                # 编辑按钮样式
+                btn_pay.setFixedSize(QSize(120, 40))
+                btn_pay.setStyleSheet(
+                    "QPushButton{color:white;background-color:rgb(51,204,255);font-family:黑体;border-radius: 15px;}"
+                    "QPushButton:pressed{background-color:rgb(51,129,172)}")
+                btn_pay.clicked.connect(
+                    lambda: self.pay(results[i][-1]))
+                vLayout1 = QHBoxLayout()
+                widget_btn1 = QWidget()
+                vLayout1.addWidget(btn_pay)  # 布局中添加了控件
+                widget_btn1.setLayout(vLayout1)  # Widget中添加布局
+                table.setCellWidget(i, columnCounter, widget_btn1)  # 表格中添加Widget
+
+    def pay(self, fno):
+        ShareInfo.payWin = Win_pay(self.Pno, fno)
+        ShareInfo.payWin.ui.show()
+
+
+class Win_pay:
+    def __init__(self, pno, fno):
+        self.ui = QUiLoader().load('pay.ui')
+        self.ui.btn_pay.clicked.connect(self.pay)
+        self.Pno = pno
+        self.Fno = fno
+        sql = "SELECT Cno, Cname from `cs2329.cashier` "
+        self.cnames = jdbc.dbQueryAll(sql)
+        self.ui.cnameComboBox.addItem("请选择收银员")
+        for cname in self.cnames:
+            self.ui.cnameComboBox.addItem(cname[1])
+        sql = "SELECT FRecipefee, Fdiscount, Fsum " \
+              "from `cs2329.fee` F where F.Fno=%s" % self.Fno
+        self.result = jdbc.dbQueryOne(sql)
+        if self.result:
+            [frecipefee, fdiscount, fsum] = self.result
+            self.ui.FnoEdit.setText(str(self.Fno))
+            self.ui.FRecipefeeEdit.setText(str(frecipefee))
+            self.ui.FdiscountEdit.setText(str(fdiscount))
+            self.ui.FsumEdit.setText(str(fsum))
+
+    def pay(self):
+        index = self.ui.cnameComboBox.currentIndex()
+        if index == 0:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请选择收银员'
+            )
+        else:
+            dgtime = datetime.datetime.now().strftime('%Y-%m-%d  %H:%M:%S')
+            sql = "UPDATE `cs2329.fee` set FDate='%s', Cno=%s " % (dgtime, self.cnames[index-1][0])
+            if jdbc.dbUpdate(sql):
+                QMessageBox.information(
+                    self.ui,
+                    '成功',
+                    '缴费成功'
+                )
+            else:
+                QMessageBox.critical(
+                    self.ui,
+                    '失败',
+                    '缴费失败'
+                )
 
 
 class Win_updatePatient:
@@ -888,7 +1137,8 @@ class Win_updatePatient:
         pino = self.ui.pinoEdit.text()
         pmno = self.ui.pmnoEdit.text()
         padd = self.ui.paddEdit.text()
-        sql = "update `cs2329.patient` set Pname='%s', Pino='%s', Pmno='%s', Padd='%s' where Pno = %s" % (pname, pino, pmno, padd, pno)
+        sql = "update `cs2329.patient` set Pname='%s', Pino='%s', Pmno='%s', Padd='%s' where Pno = %s" % (
+        pname, pino, pmno, padd, pno)
         # 需要对patientTable数据进行更新
         if jdbc.dbUpdate(sql):
             mySignals.updatePatient.emit(0, self.pno)
@@ -918,7 +1168,8 @@ class Win_insertPatient:
         padd = self.ui.paddEdit.text()
         mTel = self.ui.mTelEdit.text()
 
-        sql1 = "insert into `cs2329.patient` (Pno, Pname, Pid, Pino, Pmno, Psex, Pbd, Padd) values (%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s')" % (pno, pname, pid, pino, pmno, psex, pbd, padd)
+        sql1 = "insert into `cs2329.patient` (Pno, Pname, Pid, Pino, Pmno, Psex, Pbd, Padd) values (%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s')" % (
+        pno, pname, pid, pino, pmno, psex, pbd, padd)
         sql2 = "insert into `cs2329.patient_tel` (Pno, Pteltype, Ptelcode) values (%s, '%s', '%s')" % (pno, "手机", mTel)
 
         # 需要对patientTable数据进行更新
@@ -951,7 +1202,8 @@ class Win_updatePatientTel:
         ptno = self.ui.ptnoEdit.text()
         pteltype = self.ui.pteltypeEdit.text()
         ptelcode = self.ui.ptelcodeEdit.text()
-        sql = "update `cs2329.patient_tel` set Pteltype='%s', Ptelcode='%s' where Ptno = %s" % (pteltype, ptelcode, ptno)
+        sql = "update `cs2329.patient_tel` set Pteltype='%s', Ptelcode='%s' where Ptno = %s" % (
+        pteltype, ptelcode, ptno)
         # 需要对patientTable数据进行更新
         if jdbc.dbUpdate(sql):
             mySignals.updatePatient.emit(1, self.ptno)
@@ -973,7 +1225,8 @@ class Win_insertPatientTel:
         pteltype = self.ui.pteltypeEdit.text()
         ptelcode = self.ui.ptelcodeEdit.text()
 
-        sql = "insert into `cs2329.patient_tel` (Ptno, Pno, Pteltype, Ptelcode) values (%s, %s, '%s', '%s')" % (ptno, pno, pteltype, ptelcode)
+        sql = "insert into `cs2329.patient_tel` (Ptno, Pno, Pteltype, Ptelcode) values (%s, %s, '%s', '%s')" % (
+        ptno, pno, pteltype, ptelcode)
 
         # 需要对patientTable数据进行更新
         if jdbc.dbInsert(sql):
@@ -1028,7 +1281,8 @@ class Win_updateDoctor:
         else:
             disex = '否'
         dfee = self.ui.DfeeEdit.text()
-        sql = "update `cs2329.doctor` set Dname='%s', Dsex='%s', Dage=%s, Ddeptno=%s, Tno=%s, Dregno='%s', Disex='%s', Dfee=%s where Dno = %s" % (dname, dsex, dage, ddeptno, tno, dregno, disex, dfee, dno)
+        sql = "update `cs2329.doctor` set Dname='%s', Dsex='%s', Dage=%s, Ddeptno=%s, Tno=%s, Dregno='%s', Disex='%s', Dfee=%s where Dno = %s" % (
+        dname, dsex, dage, ddeptno, tno, dregno, disex, dfee, dno)
         # 需要对HRTable数据进行更新
         if jdbc.dbUpdate(sql):
             mySignals.updateHR.emit(0, self.Dno)
@@ -1062,7 +1316,7 @@ class Win_insertDoctor:
         dfee = self.ui.DfeeEdit.text()
 
         sql = "insert into `cs2329.doctor` (Dno, Dname, Dsex, Dage, Ddeptno, Tno, Dregno, Disex, Dfee) values (%s, '%s', '%s', %s, %s, %s, '%s', '%s', %s)" % (
-        dno, dname, dsex, dage, ddeptno, tno, dregno, disex, dfee)
+            dno, dname, dsex, dage, ddeptno, tno, dregno, disex, dfee)
 
         # 需要对HRTable数据进行更新
         if jdbc.dbInsert(sql):
@@ -1109,7 +1363,8 @@ class Win_updateNurse:
         tno = self.ui.TnoEdit.text()
         nceno = self.ui.NcenoEdit.text()
         nlevel = self.ui.NlevelEdit.text()
-        sql = "update `cs2329.nurse` set Nname='%s', Nsex='%s', Nage=%s, Ndeptno=%s, Tno=%s, Nceno='%s', Nlevel='%s' where Nno = %s" % (nname, nsex, nage, ndeptno, tno, nceno, nlevel, nno)
+        sql = "update `cs2329.nurse` set Nname='%s', Nsex='%s', Nage=%s, Ndeptno=%s, Tno=%s, Nceno='%s', Nlevel='%s' where Nno = %s" % (
+        nname, nsex, nage, ndeptno, tno, nceno, nlevel, nno)
         # 需要对patientTable数据进行更新
         if jdbc.dbUpdate(sql):
             mySignals.updateHR.emit(1, self.Nno)
@@ -1139,7 +1394,7 @@ class Win_insertNurse:
         nlevel = self.ui.NlevelEdit.text()
 
         sql = "insert into `cs2329.nurse` (Nno, Nname, Nsex, Nage, Ndeptno, Tno, Nceno, Nlevel) values (%s, '%s', '%s', %s, %s, %s, '%s', '%s')" % (
-        nno, nname, nsex, nage, ndeptno, tno, nceno, nlevel)
+            nno, nname, nsex, nage, ndeptno, tno, nceno, nlevel)
 
         # 需要对patientTable数据进行更新
         if jdbc.dbInsert(sql):
@@ -1186,7 +1441,8 @@ class Win_updatePharmacist:
         tno = self.ui.TnoEdit.text()
         phceno = self.ui.PhcenoEdit.text()
         phtype = self.ui.PhtypeEdit.text()
-        sql = "update `cs2329.pharmacist` set Phname='%s', Phsex='%s', Phage=%s, Phdeptno=%s, Tno=%s, Phceno='%s', Phtype='%s' where Phno = %s" % (phname, phsex, phage, phdeptno, tno, phceno, phtype, phno)
+        sql = "update `cs2329.pharmacist` set Phname='%s', Phsex='%s', Phage=%s, Phdeptno=%s, Tno=%s, Phceno='%s', Phtype='%s' where Phno = %s" % (
+        phname, phsex, phage, phdeptno, tno, phceno, phtype, phno)
 
         if jdbc.dbUpdate(sql):
             mySignals.updateHR.emit(2, self.Phno)
@@ -1216,7 +1472,7 @@ class Win_insertPharmacist:
         phtype = self.ui.PhtypeEdit.text()
 
         sql = "insert into `cs2329.pharmacist` (Phno, Phname, Phsex, Phage, Phdeptno, Tno, Phceno, Phtype) values (%s, '%s', '%s', %s, %s, %s, '%s', '%s')" % (
-        phno, phname, phsex, phage, phdeptno, tno, phceno, phtype)
+            phno, phname, phsex, phage, phdeptno, tno, phceno, phtype)
 
         if jdbc.dbInsert(sql):
             mySignals.insertHR.emit(2)
@@ -1260,7 +1516,8 @@ class Win_updateCashier:
         cdeptno = self.ui.CdeptnoEdit.text()
         tno = self.ui.TnoEdit.text()
         cceno = self.ui.CcenoEdit.text()
-        sql = "update `cs2329.cashier` set Cname='%s', Csex='%s', Cage=%s, Cdeptno=%s, Tno=%s, Cceno='%s' where Cno = %s" % (cname, csex, cage, cdeptno, tno, cceno, cno)
+        sql = "update `cs2329.cashier` set Cname='%s', Csex='%s', Cage=%s, Cdeptno=%s, Tno=%s, Cceno='%s' where Cno = %s" % (
+        cname, csex, cage, cdeptno, tno, cceno, cno)
         # 需要对patientTable数据进行更新
         if jdbc.dbUpdate(sql):
             mySignals.updateHR.emit(3, self.Cno)
@@ -1289,7 +1546,7 @@ class Win_insertCashier:
         cceno = self.ui.CcenoEdit.text()
 
         sql = "insert into `cs2329.cashier` (Cno, Cname, Csex, Cage, Cdeptno, Tno, Cceno) values (%s, '%s', '%s', %s, %s, %s, '%s')" % (
-        cno, cname, csex, cage, cdeptno, tno, cceno)
+            cno, cname, csex, cage, cdeptno, tno, cceno)
 
         if jdbc.dbInsert(sql):
             mySignals.insertHR.emit(3)
@@ -1324,27 +1581,30 @@ class Win_Recipe_Detail:
 class Win_Fee:
     def __init__(self, rmno):
         self.ui = QUiLoader().load('Fee.ui')
-        self.RMno = rmno
         self.ui.btn_close.clicked.connect(self.close)
-
+        self.RMno = rmno
         sql = "SELECT Fno, Fnumber, Fdate, DGno, F.Rno, F.Cno, Cname, F.Pno, Pname, Do.Dno, Dname, FRecipefee, Fdiscount, Fsum " \
               "from `cs2329.fee` F, `cs2329.cashier` C, `cs2329.doctor` Do, `cs2329.recipe_master` R, `cs2329.patient` P " \
-              "where F.Rno = %s and F.Cno = C.Cno and F.Pno = P.Pno and R.RMno=%s and R.Dno = Do.Dno" % (self.RMno, self.RMno)
-        [Fno, Fnumber, Fdate, DGno, Rno, Cno, Cname, Pno, Pname, Dno, Dname, FRecipefee, Fdiscount, Fsum] = jdbc.dbQueryOne(sql)
-        self.ui.FnoEdit.setText(str(Fno))
-        self.ui.FnumberEdit.setText(str(Fnumber))
-        self.ui.FdateEdit.setText(str(Fdate))
-        self.ui.DGnoEdit.setText(str(DGno))
-        self.ui.RnoEdit.setText(str(Rno))
-        self.ui.CnoEdit.setText(str(Cno))
-        self.ui.CnameEdit.setText(str(Cname))
-        self.ui.PnoEdit.setText(str(Pno))
-        self.ui.PnameEdit.setText(str(Pname))
-        self.ui.DnoEdit.setText(str(Dno))
-        self.ui.DnameEdit.setText(str(Dname))
-        self.ui.FRecipefeeEdit.setText(str(FRecipefee))
-        self.ui.FdiscountEdit.setText(str(Fdiscount))
-        self.ui.FsumEdit.setText(str(Fsum))
+              "where F.Rno = %s and F.Cno = C.Cno and F.Pno = P.Pno and R.RMno=%s and R.Dno = Do.Dno" % (
+              self.RMno, self.RMno)
+        self.result = jdbc.dbQueryOne(sql)
+        if self.result:
+            [Fno, Fnumber, Fdate, DGno, Rno, Cno, Cname, Pno, Pname, Dno, Dname, FRecipefee, Fdiscount,
+             Fsum] = jdbc.dbQueryOne(sql)
+            self.ui.FnoEdit.setText(str(Fno))
+            self.ui.FnumberEdit.setText(str(Fnumber))
+            self.ui.FdateEdit.setText(str(Fdate))
+            self.ui.DGnoEdit.setText(str(DGno))
+            self.ui.RnoEdit.setText(str(Rno))
+            self.ui.CnoEdit.setText(str(Cno))
+            self.ui.CnameEdit.setText(str(Cname))
+            self.ui.PnoEdit.setText(str(Pno))
+            self.ui.PnameEdit.setText(str(Pname))
+            self.ui.DnoEdit.setText(str(Dno))
+            self.ui.DnameEdit.setText(str(Dname))
+            self.ui.FRecipefeeEdit.setText(str(FRecipefee))
+            self.ui.FdiscountEdit.setText(str(Fdiscount))
+            self.ui.FsumEdit.setText(str(Fsum))
 
     def close(self):
         self.ui.close()
@@ -1356,5 +1616,3 @@ mySignals = MySignals()
 ShareInfo.loginWin = Win_Login()
 ShareInfo.loginWin.ui.show()
 app.exec_()
-
-

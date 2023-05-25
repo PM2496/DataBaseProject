@@ -531,9 +531,6 @@ p, li { white-space: pre-wrap; }
             </layout>
            </item>
           </layout>
-          <zorder>layoutWidget</zorder>
-          <zorder>textEdit_11</zorder>
-          <zorder>ptelEdit</zorder>
          </widget>
         </item>
         <item>
@@ -858,22 +855,7 @@ p, li { white-space: pre-wrap; }
       <widget class="QWidget" name="page_3">
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="QWidget" name="widget_5" native="true">
-          <layout class="QHBoxLayout" name="horizontalLayout_7">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QTableWidget" name="diagnosisTable">
+         <widget class="QTableWidget" name="recordTable">
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
@@ -888,14 +870,25 @@ p, li { white-space: pre-wrap; }
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_11"/>
         </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="page_4">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QWidget" name="widget_3" native="true">
-          <layout class="QHBoxLayout" name="horizontalLayout_4"/>
+         <widget class="QTableWidget" name="payTable">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
          </widget>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="page_4"/>
      </widget>
     </item>
    </layout>
