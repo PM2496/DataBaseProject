@@ -32,6 +32,7 @@ class MySignals(QObject):
     updateUser = Signal(int, str)
     insert = Signal(int)
     #
+    diagnosis = Signal()
 
 
 class Win_Login:
@@ -53,7 +54,8 @@ class Win_Login:
         self.ui.stackedWidget.setCurrentIndex(index)
 
     def onRegister(self):
-        return
+        ShareInfo.registerWin = Win_Register()
+        ShareInfo.registerWin.ui.show()
 
     def onSignIn(self):
         if not self.ui.usernameEdit.text() or not self.ui.passwordEdit.text():
@@ -97,6 +99,61 @@ class Win_Login:
                 self.ui,
                 '登录失败',
                 '请检查用户名和密码'
+            )
+
+
+class Win_Register():
+    def __init__(self):
+        self.ui = QUiLoader().load('register.ui')
+        self.ui.rbtn_male.setChecked(True)
+        self.ui.btn_register.clicked.connect(self.register)
+
+    def register(self):
+        pname = self.ui.pnameEdit.text()
+        pid = self.ui.pidEdit.text()
+        pino = self.ui.pinoEdit.text()
+        pmno = self.ui.pmnoEdit.text()
+        if self.ui.rbtn_male.isChecked():
+            psex = '男'
+        else:
+            psex = '女'
+        pbd = self.ui.pbdEdit.text()
+        padd = self.ui.paddEdit.text()
+        mTel = self.ui.mTelEdit.text()
+
+        username = self.ui.usernameEdit.text()
+        password = self.ui.passwordEdit.text()
+
+        if not pname or not pid or not pino or not pmno or not pbd or not padd or not mTel or not username or not password:
+            QMessageBox.warning(
+                self.ui,
+                '提示',
+                '请完善注册信息'
+            )
+            return
+
+        sql = "SELECT max(Pno)+1 from `cs2329.patient`"
+        pno = jdbc.dbQueryOne(sql)[0]
+
+        sql1 = "insert into `cs2329.patient` (Pno, Pname, Pid, Pino, Pmno, Psex, Pbd, Padd) values (%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s')" % (
+        pno, pname, pid, pino, pmno, psex, pbd, padd)
+
+        sql2 = "insert into `cs2329.patient_tel` (Pno, Pteltype, Ptelcode) values (%s, '%s', '%s')" % (pno, "手机", mTel)
+
+        sql3 = "insert into `cs2329.patientuser` (Pno, USERNAME, PASSWORD) values (%s, '%s', '%s')" % (pno, username, password)
+        # 需要对patientTable数据进行更新
+        if jdbc.dbInsert(sql1) and jdbc.dbInsert(sql2) and jdbc.dbInsert(sql3):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '注册成功'
+            )
+            self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '身份证号或用户名已存在'
             )
 
 
@@ -563,8 +620,19 @@ class Win_Root(QWidget):
         sql = "DELETE from `%s` where %s = %s" % (
         tables[currentIndex][0], tables[currentIndex][1], int(self.ui.patientTable.item(currentRow, 0).text()))
 
-        jdbc.dbDelete(sql)
-        self.patientDisplay(currentIndex)
+        if jdbc.dbDelete(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '删除成功'
+            )
+            self.patientDisplay(currentIndex)
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '删除失败'
+            )
 
     def queryHR(self):
         HRInfo = self.ui.HRInfo.text()
@@ -687,8 +755,19 @@ class Win_Root(QWidget):
         sql = "DELETE from `%s` where %s = %s" % (
         tables[currentIndex][0], tables[currentIndex][1], int(self.ui.HRTable.item(currentRow, 0).text()))
 
-        jdbc.dbDelete(sql)
-        self.HRDisplay(currentIndex)
+        if jdbc.dbDelete(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '删除成功'
+            )
+            self.HRDisplay(currentIndex)
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '删除失败'
+            )
 
 
 class Win_Doctor(QWidget):
@@ -936,8 +1015,19 @@ class Win_Patient(QWidget):
         sql = "UPDATE `cs2329.patient` Pa, `cs2329.patient_tel` Pt " \
               "set Pa.Pino = '%s', Pa.Pmno = '%s', Pa.Padd = '%s', Pt.Ptelcode = '%s' " \
               "where Pa.Pno = %s and Pt.Pno = %s" % (pino, pmno, padd, ptelcode, self.Pno, self.Pno)
-        jdbc.dbUpdate(sql)
-        self.resetUserFormAndBtn()
+        if jdbc.dbUpdate(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '更新成功'
+            )
+            self.resetUserFormAndBtn()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '更新失败'
+            )
 
     def updateDoctorComboBox(self, index):
         if index == 0 or index == -1:
@@ -1141,8 +1231,19 @@ class Win_updatePatient:
         pname, pino, pmno, padd, pno)
         # 需要对patientTable数据进行更新
         if jdbc.dbUpdate(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '更新成功'
+            )
             mySignals.updatePatient.emit(0, self.pno)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '更新失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1174,8 +1275,19 @@ class Win_insertPatient:
 
         # 需要对patientTable数据进行更新
         if jdbc.dbInsert(sql1) and jdbc.dbInsert(sql2):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '插入成功'
+            )
             mySignals.insertPatient.emit(0)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '插入失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1206,8 +1318,19 @@ class Win_updatePatientTel:
         pteltype, ptelcode, ptno)
         # 需要对patientTable数据进行更新
         if jdbc.dbUpdate(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '更新成功'
+            )
             mySignals.updatePatient.emit(1, self.ptno)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '更新失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1230,8 +1353,19 @@ class Win_insertPatientTel:
 
         # 需要对patientTable数据进行更新
         if jdbc.dbInsert(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '插入成功'
+            )
             mySignals.insertPatient.emit(1)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '插入失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1285,8 +1419,19 @@ class Win_updateDoctor:
         dname, dsex, dage, ddeptno, tno, dregno, disex, dfee, dno)
         # 需要对HRTable数据进行更新
         if jdbc.dbUpdate(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '更新成功'
+            )
             mySignals.updateHR.emit(0, self.Dno)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '更新失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1320,8 +1465,19 @@ class Win_insertDoctor:
 
         # 需要对HRTable数据进行更新
         if jdbc.dbInsert(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '插入成功'
+            )
             mySignals.insertHR.emit(0)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '插入失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1367,8 +1523,19 @@ class Win_updateNurse:
         nname, nsex, nage, ndeptno, tno, nceno, nlevel, nno)
         # 需要对patientTable数据进行更新
         if jdbc.dbUpdate(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '更新成功'
+            )
             mySignals.updateHR.emit(1, self.Nno)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '更新失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1398,8 +1565,19 @@ class Win_insertNurse:
 
         # 需要对patientTable数据进行更新
         if jdbc.dbInsert(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '插入成功'
+            )
             mySignals.insertHR.emit(1)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '插入失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1445,8 +1623,19 @@ class Win_updatePharmacist:
         phname, phsex, phage, phdeptno, tno, phceno, phtype, phno)
 
         if jdbc.dbUpdate(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '更新成功'
+            )
             mySignals.updateHR.emit(2, self.Phno)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '更新失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1475,8 +1664,19 @@ class Win_insertPharmacist:
             phno, phname, phsex, phage, phdeptno, tno, phceno, phtype)
 
         if jdbc.dbInsert(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '插入成功'
+            )
             mySignals.insertHR.emit(2)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '插入失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1520,8 +1720,19 @@ class Win_updateCashier:
         cname, csex, cage, cdeptno, tno, cceno, cno)
         # 需要对patientTable数据进行更新
         if jdbc.dbUpdate(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '更新成功'
+            )
             mySignals.updateHR.emit(3, self.Cno)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '更新失败'
+            )
 
     def quitInfo(self):
         self.ui.close()
@@ -1549,8 +1760,19 @@ class Win_insertCashier:
             cno, cname, csex, cage, cdeptno, tno, cceno)
 
         if jdbc.dbInsert(sql):
+            QMessageBox.information(
+                self.ui,
+                '成功',
+                '插入成功'
+            )
             mySignals.insertHR.emit(3)
             self.ui.close()
+        else:
+            QMessageBox.critical(
+                self.ui,
+                '失败',
+                '插入失败'
+            )
 
     def quitInfo(self):
         self.ui.close()

@@ -1,4 +1,5 @@
 class ShareInfo:
+    registerWin = None
     rootWin = None
     doctorWin = None
     patientWin = None
