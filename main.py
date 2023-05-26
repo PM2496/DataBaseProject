@@ -999,7 +999,7 @@ class Win_Diagnosis(QWidget):
                    "values (%s, %s, %s, %s, '%s')" % (rmno, self.DeptNo, self.Dno, self.Pno, dgtime)
             sql4 = "INSERT into `cs2329.recipe_detail` (RMno, Mno, RDprice, RDnumber, RDunit) " \
                    "values (%s, %s, %s, %s, '%s')" % (rmno, mno, mprice, mnumber, munit)
-            rfecipefee = float(mnumber) * float(mprice)
+            rfecipefee = float(mnumber) * float(mprice) + float(rfee) # 缴纳费用等于就诊费用加药品费用
             sql5 = "INSERT into `cs2329.fee` (DGno, Rno, Pno, FRecipefee, Fdiscount, Fsum) " \
                    "values (%s, %s, %s, %s, %s, %s)" % (self.DGno, rmno, self.Pno, rfecipefee, 0, rfecipefee)
             if jdbc.dbUpdate(sql1) and jdbc.dbInsert(sql3) and jdbc.dbInsert(sql4) and jdbc.dbInsert(sql5):

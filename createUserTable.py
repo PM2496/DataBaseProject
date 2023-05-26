@@ -9,7 +9,7 @@ cursor = conn.cursor()
 # 创建管理员账户表
 sql = """
 create table `cs2329.rootUser` (No int unsigned NOT NULL AUTO_INCREMENT, USERNAME CHAR(20) not null , PASSWORD CHAR(20) not null, primary key (No));
-insert into `cs2329.rootUser` (USERNAME, PASSWORD) values('root', '909090');
+insert into `cs2329.rootUser` (USERNAME, PASSWORD) values('root', '123');
 """
 
 try:
